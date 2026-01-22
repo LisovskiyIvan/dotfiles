@@ -11,22 +11,24 @@
   "ui_font_family": ".ZedSans",
   "buffer_font_family": ".ZedMono",
   "terminal": {
-    "shell": "system"
+    "shell": {
+      "program": "zsh",
+    }
   },
   "vim_mode": true,
   "buffer_font_weight": 400.0,
   "telemetry": {
     "diagnostics": true,
-    "metrics": true
+    "metrics": true,
   },
   "minimap": {
-    "show": "auto"
+    "show": "auto",
   },
   "cursor_blink": true,
   "autosave": {
     "after_delay": {
-      "milliseconds": 500
-    }
+      "milliseconds": 500,
+    },
   },
   "file_types": {},
   "soft_wrap": "editor_width",
@@ -37,9 +39,9 @@
   "theme": {
     "mode": "dark",
     "light": "One Light",
-    "dark": "Tokyo Night Moon"
+    "dark": "Tokyo Night Moon",
   },
   "experimental.theme_overrides": {
-    "background.image": "path/to/image.jpg"
-  }
+    "background.image": "path/to/image.jpg",
+  },
 }
