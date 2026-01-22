@@ -8,5 +8,5 @@ map("n", ";", ":", { desc = "CMD enter command mode" })
 map("i", "jk", "<ESC>")
 map("i", "jj", "<ESC>")
 map("n", "gd", vim.lsp.buf.definition, { desc = "LSP go to definition" })
+map("n", "<leader>gg", "<cmd>LazyGit<cr>", { desc = "LazyGit" })
 -- map({ "n", "i", "v" }, "<C-s>", "<cmd> w <cr>")
-

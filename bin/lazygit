@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ -z "${USERPROFILE:-}" ]; then
+  echo "USERPROFILE not set; cannot locate WinGet lazygit" >&2
+  exit 1
+fi
+
+cyg_userprofile=$(cygpath -u "$USERPROFILE")
+winget_dir="$cyg_userprofile/AppData/Local/Microsoft/WinGet/Packages"
+exe=$(ls -1 "$winget_dir"/JesseDuffield.lazygit_*/lazygit.exe 2>/dev/null | head -n 1)
+
+if [ -z "$exe" ]; then
+  echo "lazygit.exe not found under $winget_dir" >&2
+  exit 1
+fi
+
+exec "$exe" "$@"

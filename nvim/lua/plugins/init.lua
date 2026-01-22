@@ -13,6 +13,12 @@ return {
     end,
   },
 
+  {
+    "kdheepak/lazygit.nvim",
+    lazy = false,
+    dependencies = { "nvim-lua/plenary.nvim" },
+  },
+
   -- {
   --   "williamboman/mason-lspconfig.nvim",
   --   event = "VeryLazy",
