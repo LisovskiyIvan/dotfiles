@@ -21,23 +21,31 @@ config.font_size = 14.0
 -- 2. Рабочая директория
 -- Мы используем Lua функцию для получения домашней папки, аналог %USERPROFILE%
 local home_dir = wezterm.home_dir
-config.default_cwd = home_dir .. '\\dev'
+local is_windows = wezterm.target_triple:find('windows') ~= nil
 
--- 3. Оболочка (Shell) - Cygwin Zsh
+if is_windows then
+  config.default_cwd = home_dir .. '\\dev'
+else
+  config.default_cwd = home_dir .. '/dev'
+end
+
+-- 3. Оболочка (Shell) - Cygwin Zsh (только Windows)
 -- Мы используем prepend_args, чтобы передать флаги запуска
 -- config.default_domain = 'Default' -- Это важно для  /Windows
 
-config.default_prog = { 'C:\\cygwin64\\bin\\zsh.exe', '-l', '-i' }
+if is_windows then
+  config.default_prog = { 'C:\\cygwin64\\bin\\zsh.exe', '-l', '-i' }
 
--- 4. Переменные окружения
-config.set_environment_variables = {
-  -- Аналог TERM = "xterm-256color"
-  TERM = 'xterm-256color',
-  
-  -- Переменная Cygwin, чтобы не менялась директория при запуске
-  CHERE_INVOKING = '1',
-  SHELL = 'C:\\cygwin64\\bin\\zsh.exe',
-}
+  -- 4. Переменные окружения
+  config.set_environment_variables = {
+    -- Аналог TERM = "xterm-256color"
+    TERM = 'xterm-256color',
+
+    -- Переменная Cygwin, чтобы не менялась директория при запуске
+    CHERE_INVOKING = '1',
+    SHELL = 'C:\\cygwin64\\bin\\zsh.exe',
+  }
+end
 -- Цветовая схема (опционально, чтобы было не так скучно)
 config.color_scheme = 'Tokyo Night'
 config.keys = {

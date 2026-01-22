@@ -1,5 +1,9 @@
-vim.opt.shell = "C:/cygwin64/bin/zsh.exe"
-vim.opt.shellcmdflag = "-c"
+local is_windows = vim.fn.has("win32") == 1
+
+if is_windows then
+  vim.opt.shell = "C:/cygwin64/bin/zsh.exe"
+  vim.opt.shellcmdflag = "-c"
+end
 
 vim.opt.relativenumber = true
 
@@ -9,13 +13,15 @@ vim.g.mapleader = " "
 local function setup_cygwin_paths()
   -- Патчим vim.system или аналогичные функции
   local original_spawn = vim.system or vim.loop.spawn
-  
+
   -- ИЛИ устанавливаем переменные окружения для libuv
   vim.fn.setenv("SHELL", "C:/cygwin64/bin/zsh.exe")
   vim.fn.setenv("PATH", "/usr/bin:/bin:" .. vim.fn.getenv("PATH"))
 end
 
-setup_cygwin_paths()
+if is_windows then
+  setup_cygwin_paths()
+end
 -- bootstrap lazy and all plugins
 local lazypath = vim.fn.stdpath "data" .. "/lazy/lazy.nvim"
 
