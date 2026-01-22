@@ -1,0 +1,67 @@
+
+-- Мы вытаскиваем библиотеку wezterm в локальную переменную для удобства
+local wezterm = require 'wezterm'
+local act = wezterm.action
+
+-- Это таблица конфигурации
+local config = {}
+
+-- В последней версии WezTerm рекомендуется использовать config.resolve_errors
+if wezterm.config_builder then
+  config = wezterm.config_builder()
+end
+
+-- --- НАСТРОЙКИ ИЗ ALACRITTY ---
+
+-- 1. Шрифт
+config.font = wezterm.font('SauceCodePro Nerd Font', { weight = 'Regular', italic = false })
+-- config.font = wezterm.font('JetBrains Mono', { weight = 'Regular', italic = false })
+config.font_size = 14.0
+
+-- 2. Рабочая директория
+-- Мы используем Lua функцию для получения домашней папки, аналог %USERPROFILE%
+local home_dir = wezterm.home_dir
+config.default_cwd = home_dir .. '\\dev'
+
+-- 3. Оболочка (Shell) - Cygwin Zsh
+-- Мы используем prepend_args, чтобы передать флаги запуска
+-- config.default_domain = 'Default' -- Это важно для  /Windows
+
+config.default_prog = { 'C:\\cygwin64\\bin\\zsh.exe', '-l', '-i' }
+
+-- 4. Переменные окружения
+config.set_environment_variables = {
+  -- Аналог TERM = "xterm-256color"
+  TERM = 'xterm-256color',
+  
+  -- Переменная Cygwin, чтобы не менялась директория при запуске
+  CHERE_INVOKING = '1',
+  SHELL = 'C:\\cygwin64\\bin\\zsh.exe',
+}
+-- Цветовая схема (опционально, чтобы было не так скучно)
+config.color_scheme = 'Tokyo Night'
+config.keys = {
+  {key = '-', mods = 'ALT', action = act.SplitHorizontal{ domain = 'CurrentPaneDomain'}},
+{key = '=', mods = 'ALT', action = act.SplitVertical{ domain = 'CurrentPaneDomain'}},
+{ key = 'a', mods = 'ALT', action = act.CloseCurrentPane { confirm = false } },
+-- config.leader = { key = 'a', mods = 'CTRL', timeout_milliseconds = 1000 }
+-- config.keys = {
+--   -- Разделить окно по вертикали (Ctrl+A затем | )
+--   { key = '|', mods = 'LEADER|SHIFT', action = wezterm.action.SplitHorizontal { domain = 'CurrentPaneDomain' } },
+--
+--   -- Разделить окно по горизонтали (Ctrl+A затем - )
+--   { key = '-', mods = 'LEADER', action = wezterm.action.SplitVertical { domain = 'CurrentPaneDomain' } },
+--
+  -- Переключение между панелями (Ctrl+A затем стрелка)
+  { key = 'LeftArrow', mods = 'CTRL', action = wezterm.action.ActivatePaneDirection 'Left' },
+  { key = 'RightArrow', mods = 'CTRL', action = wezterm.action.ActivatePaneDirection 'Right' },
+  { key = 'UpArrow', mods = 'CTRL', action = wezterm.action.ActivatePaneDirection 'Up' },
+  { key = 'DownArrow', mods = 'CTRL', action = wezterm.action.ActivatePaneDirection 'Down' },
+--
+--   -- Закрыть текущую панель (Ctrl+A затем w)
+--   { key = 'w', mods = 'LEADER', action = wezterm.action.CloseCurrentPane { confirm = true } },
+--
+--   -- Новая вкладка (Ctrl+A затем t)
+--   { key = 't', mods = 'LEADER', action = wezterm.action.SpawnTab 'CurrentPaneDomain' },
+}
+return config
