@@ -23,7 +23,13 @@ vim.lsp.config("vue_ls", {
   },
 })
 
-vim.lsp.enable { "ts_ls", "vue_ls" }
+vim.lsp.config("gopls", {
+  on_attach = nvlsp.on_attach,
+  on_init = nvlsp.on_init,
+  capabilities = nvlsp.capabilities,
+})
+
+vim.lsp.enable { "ts_ls", "vue_ls", "gopls" }
 
 -- Configure path and @/ alias resolution for gf command
 vim.opt.path = { ".", "..", "src", "src/**" }

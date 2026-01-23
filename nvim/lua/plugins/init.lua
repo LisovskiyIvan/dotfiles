@@ -19,6 +19,11 @@ return {
     dependencies = { "nvim-lua/plenary.nvim" },
   },
 
+  {
+    "fatih/vim-go",
+    ft = "go",
+  },
+
   -- {
   --   "williamboman/mason-lspconfig.nvim",
   --   event = "VeryLazy",
@@ -33,13 +38,14 @@ return {
   -- test new blink
   -- { import = "nvchad.blink.lazyspec" },
 
-  -- {
-  -- 	"nvim-treesitter/nvim-treesitter",
-  --	opts = {
-  --		ensure_installed = {
-  --			"vim", "lua", "vimdoc",
-  --      "html", "css"
-  --		},
-  --	},
-  -- }, 
+  {
+    "nvim-treesitter/nvim-treesitter",
+    opts = {
+      ensure_installed = {
+        "vim", "lua", "vimdoc",
+        "html", "css", "go",
+        "javascript", "typescript", "tsx", "jsx",
+      },
+    },
+  }, 
 }
