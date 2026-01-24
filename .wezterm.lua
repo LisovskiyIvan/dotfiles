@@ -3,6 +3,22 @@
 local wezterm = require 'wezterm'
 local act = wezterm.action
 
+local function get_random_image()
+  local images_dir = "Z:\\dev\\myself\\dotfiles\\img"
+  local images = {}
+  
+  for file in io.popen('dir "' .. images_dir .. '" /b'):lines() do
+    table.insert(images, images_dir .. "\\" .. file)
+  end
+  
+  if #images == 0 then
+    return nil
+  end
+  
+  math.randomseed(os.time())
+  return images[math.random(#images)]
+end
+
 -- Это таблица конфигурации
 local config = {}
 
@@ -46,8 +62,24 @@ if is_windows then
     SHELL = 'C:\\cygwin64\\bin\\zsh.exe',
   }
 end
--- Цветовая схема (опционально, чтобы было не так скучно)
-config.color_scheme = 'Tokyo Night'
+ -- Цветовая схема (опционально, чтобы было не так скучно)
+ config.color_scheme = 'Tokyo Night'
+
+config.window_background_opacity = 0.85
+config.text_background_opacity = 0.85
+config.win32_system_backdrop = "Acrylic"
+config.background = {
+  {
+    source = { File = get_random_image() },
+    hsb = { brightness = 0.2 },
+    repeat_x = "NoRepeat",
+    repeat_y = "NoRepeat",
+    vertical_align = "Bottom",
+    horizontal_align = "Center",
+    opacity = 1,
+  },
+}
+
 config.keys = {
   {key = '-', mods = 'ALT', action = act.SplitHorizontal{ domain = 'CurrentPaneDomain'}},
 {key = '=', mods = 'ALT', action = act.SplitVertical{ domain = 'CurrentPaneDomain'}},
