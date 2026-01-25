@@ -29,7 +29,13 @@ vim.lsp.config("gopls", {
   capabilities = nvlsp.capabilities,
 })
 
-vim.lsp.enable { "ts_ls", "vue_ls", "gopls" }
+vim.lsp.config("rust-analyzer", {
+  on_attach = nvlsp.on_attach,
+  on_init = nvlsp.on_init,
+  capabilities = nvlsp.capabilities,
+})
+
+vim.lsp.enable { "ts_ls", "vue_ls", "gopls", "rust-analyzer" }
 
 -- Configure path and @/ alias resolution for gf command
 vim.opt.path = { ".", "..", "src", "src/**" }

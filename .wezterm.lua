@@ -5,18 +5,15 @@ local act = wezterm.action
 
 local function get_random_image()
   local images_dir = "Z:\\dev\\myself\\dotfiles\\img"
-  local images = {}
   
-  for file in io.popen('dir "' .. images_dir .. '" /b'):lines() do
-    table.insert(images, images_dir .. "\\" .. file)
-  end
+  local success, files = pcall(wezterm.glob, images_dir .. "\\*.{jpg,jpeg,png}")
   
-  if #images == 0 then
+  if not success or not files or #files == 0 then
     return nil
   end
   
   math.randomseed(os.time())
-  return images[math.random(#images)]
+  return files[math.random(#files)]
 end
 
 -- Это таблица конфигурации
@@ -68,17 +65,21 @@ end
 config.window_background_opacity = 0.85
 config.text_background_opacity = 0.85
 config.win32_system_backdrop = "Acrylic"
-config.background = {
-  {
-    source = { File = get_random_image() },
-    hsb = { brightness = 0.2 },
-    repeat_x = "NoRepeat",
-    repeat_y = "NoRepeat",
-    vertical_align = "Bottom",
-    horizontal_align = "Center",
-    opacity = 1,
-  },
-}
+
+local bg_image = get_random_image()
+if bg_image then
+  config.background = {
+    {
+      source = { File = bg_image },
+      hsb = { brightness = 0.2 },
+      repeat_x = "NoRepeat",
+      repeat_y = "NoRepeat",
+      vertical_align = "Bottom",
+      horizontal_align = "Center",
+      opacity = 1,
+    },
+  }
+end
 
 config.keys = {
   {key = '-', mods = 'ALT', action = act.SplitHorizontal{ domain = 'CurrentPaneDomain'}},

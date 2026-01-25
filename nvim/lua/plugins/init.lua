@@ -24,16 +24,18 @@ return {
     ft = "go",
   },
 
-  -- {
-  --   "williamboman/mason-lspconfig.nvim",
-  --   event = "VeryLazy",
-  --   dependencies = { "nvim-lspconfig" },
-  --   opts = {
-  --     ensure_installed = {
-  --       "vtsls",
-  --     },
-  --   },
-  -- },
+  {
+    "williamboman/mason-lspconfig.nvim",
+    event = "VeryLazy",
+    dependencies = { "nvim-lspconfig" },
+    opts = {
+      ensure_installed = {
+        "ts_ls",
+        "rust_analyzer",
+        "gopls",
+      },
+    },
+  },
 
   -- test new blink
   -- { import = "nvchad.blink.lazyspec" },
@@ -43,7 +45,7 @@ return {
     opts = {
       ensure_installed = {
         "vim", "lua", "vimdoc",
-        "html", "css", "go",
+        "html", "css", "go", "rust",
         "javascript", "typescript", "tsx", "jsx",
       },
     },
