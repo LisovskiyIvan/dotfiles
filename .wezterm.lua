@@ -81,10 +81,30 @@ if bg_image then
   }
 end
 
+local function change_background(window, pane)
+  local new_image = get_random_image()
+  if new_image then
+    local overrides = window:get_config_overrides() or {}
+    overrides.background = {
+      {
+        source = { File = new_image },
+        hsb = { brightness = 0.2 },
+        repeat_x = "NoRepeat",
+        repeat_y = "NoRepeat",
+        vertical_align = "Bottom",
+        horizontal_align = "Center",
+        opacity = 1,
+      },
+    }
+    window:set_config_overrides(overrides)
+  end
+end
+
 config.keys = {
   {key = '-', mods = 'ALT', action = act.SplitHorizontal{ domain = 'CurrentPaneDomain'}},
-{key = '=', mods = 'ALT', action = act.SplitVertical{ domain = 'CurrentPaneDomain'}},
-{ key = 'a', mods = 'ALT', action = act.CloseCurrentPane { confirm = false } },
+  {key = '=', mods = 'ALT', action = act.SplitVertical{ domain = 'CurrentPaneDomain'}},
+  { key = 'a', mods = 'ALT', action = act.CloseCurrentPane { confirm = false } },
+  { key = 'q', mods = 'CTRL', action = wezterm.action_callback(change_background) },
 -- config.leader = { key = 'a', mods = 'CTRL', timeout_milliseconds = 1000 }
 -- config.keys = {
 --   -- Разделить окно по вертикали (Ctrl+A затем | )
