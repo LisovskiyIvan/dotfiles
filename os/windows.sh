@@ -14,4 +14,5 @@ CONFIG_TARGETS=(
   "nvim::${config_home}/nvim"
   "zed::${app_data}/Zed"
   ".wezterm.lua::${user_home}/.wezterm.lua"
+  ".zshrc::${user_home}/.zshrc"
 )

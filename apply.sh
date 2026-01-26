@@ -28,6 +28,9 @@ case "$uname_out" in
   Darwin)
     OS_SCRIPT="$REPO_ROOT/os/macos.sh"
     ;;
+  Linux*)
+    OS_SCRIPT="$REPO_ROOT/os/linux.sh"
+    ;;
   MINGW*|MSYS*|CYGWIN*)
     OS_SCRIPT="$REPO_ROOT/os/windows.sh"
     ;;

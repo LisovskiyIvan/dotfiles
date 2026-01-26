@@ -37,6 +37,10 @@ vim.lsp.config("rust-analyzer", {
 
 vim.lsp.enable { "ts_ls", "vue_ls", "gopls", "rust-analyzer" }
 
+if vim.lsp.disable then
+  vim.lsp.disable "vtsls"
+end
+
 -- Configure path and @/ alias resolution for gf command
 vim.opt.path = { ".", "..", "src", "src/**" }
 vim.opt.include = [[^import.*from.*['"]@\/]]
