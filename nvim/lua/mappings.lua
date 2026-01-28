@@ -26,4 +26,8 @@ map("n", "gd", function()
   vim.lsp.buf.definition { on_list = jump_to_first_definition }
 end, { desc = "LSP go to definition" })
 map("n", "<leader>gg", "<cmd>LazyGit<cr>", { desc = "LazyGit" })
+map("n", "<leader>q", function()
+  vim.cmd("cclose")
+  vim.cmd("lclose")
+end, { desc = "Close quickfix & loclist" })
 -- map({ "n", "i", "v" }, "<C-s>", "<cmd> w <cr>")
