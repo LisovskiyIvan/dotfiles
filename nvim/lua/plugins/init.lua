@@ -14,6 +14,18 @@ return {
   },
 
   {
+    "hrsh7th/nvim-cmp",
+    opts = function(_, opts)
+      local cmp = require "cmp"
+
+      opts.mapping = opts.mapping or cmp.mapping.preset.insert()
+      opts.mapping["<Space>"] = nil
+
+      return opts
+    end,
+  },
+
+  {
     "kdheepak/lazygit.nvim",
     lazy = false,
     dependencies = { "nvim-lua/plenary.nvim" },

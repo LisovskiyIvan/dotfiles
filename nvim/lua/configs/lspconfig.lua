@@ -2,19 +2,32 @@ require("nvchad.configs.lspconfig").defaults()
 
 local nvlsp = require "nvchad.configs.lspconfig"
 
+local capabilities = vim.deepcopy(nvlsp.capabilities)
+if capabilities.textDocument
+  and capabilities.textDocument.completion
+  and capabilities.textDocument.completion.completionItem
+then
+  capabilities.textDocument.completion.completionItem.commitCharactersSupport = false
+end
+
 local mason_path = vim.fn.stdpath "data" .. "/mason"
 local tsdk_path = mason_path .. "/packages/typescript-language-server/node_modules/typescript/lib"
 
 vim.lsp.config("ts_ls", {
   on_attach = nvlsp.on_attach,
   on_init = nvlsp.on_init,
-  capabilities = nvlsp.capabilities,
+  capabilities = capabilities,
 })
+
+vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
+  vim.lsp.handlers.signature_help,
+  { focusable = false }
+)
 
 vim.lsp.config("vue_ls", {
   on_attach = nvlsp.on_attach,
   on_init = nvlsp.on_init,
-  capabilities = nvlsp.capabilities,
+  capabilities = capabilities,
   filetypes = { "vue" },
   init_options = {
     typescript = {
@@ -26,13 +39,13 @@ vim.lsp.config("vue_ls", {
 vim.lsp.config("gopls", {
   on_attach = nvlsp.on_attach,
   on_init = nvlsp.on_init,
-  capabilities = nvlsp.capabilities,
+  capabilities = capabilities,
 })
 
 vim.lsp.config("rust-analyzer", {
   on_attach = nvlsp.on_attach,
   on_init = nvlsp.on_init,
-  capabilities = nvlsp.capabilities,
+  capabilities = capabilities,
 })
 
 vim.lsp.enable { "ts_ls", "vue_ls", "gopls", "rust-analyzer" }

@@ -1,5 +1,6 @@
 return {
   "folke/noice.nvim",
+  enabled = true,
   lazy = false,
   dependencies = {
     "MunifTanjim/nui.nvim",
@@ -19,7 +20,15 @@ return {
       },
     },
     popupmenu = {
-      enabled = true,
+      enabled = false,
+    },
+    lsp = {
+      signature = {
+        enabled = false,
+      },
+      hover = {
+        enabled = false,
+      },
     },
     views = {
       cmdline_popup = {

@@ -7,7 +7,9 @@ vim.api.nvim_create_autocmd("InsertLeave", {
   pattern = "*",
   callback = function()
     vim.schedule(function()
-      vim.cmd("silent! write")
+      if vim.bo.modifiable and not vim.bo.readonly and vim.bo.buftype == "" then
+        vim.cmd("silent! write")
+      end
     end)
   end,
 })
