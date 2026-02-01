@@ -27,7 +27,7 @@ return {
         enabled = false,
       },
       hover = {
-        enabled = false,
+        enabled = true,
       },
     },
     views = {
