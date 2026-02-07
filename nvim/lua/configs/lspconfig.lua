@@ -48,7 +48,22 @@ vim.lsp.config("rust-analyzer", {
   capabilities = capabilities,
 })
 
-vim.lsp.enable { "ts_ls", "vue_ls", "gopls", "rust-analyzer" }
+vim.lsp.config("pyright", {
+  on_attach = nvlsp.on_attach,
+  on_init = nvlsp.on_init,
+  capabilities = capabilities,
+  settings = {
+    python = {
+      analysis = {
+        typeCheckingMode = "basic",
+        autoImportCompletions = true,
+        diagnosticMode = "workspace",
+      },
+    },
+  },
+})
+
+vim.lsp.enable { "ts_ls", "vue_ls", "gopls", "rust-analyzer", "pyright" }
 
 if vim.lsp.disable then
   vim.lsp.disable "vtsls"
