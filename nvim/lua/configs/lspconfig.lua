@@ -42,7 +42,7 @@ vim.lsp.config("gopls", {
   capabilities = capabilities,
 })
 
-vim.lsp.config("rust-analyzer", {
+vim.lsp.config("rust_analyzer", {
   on_attach = nvlsp.on_attach,
   on_init = nvlsp.on_init,
   capabilities = capabilities,
@@ -63,7 +63,38 @@ vim.lsp.config("pyright", {
   },
 })
 
-vim.lsp.enable { "ts_ls", "vue_ls", "gopls", "rust-analyzer", "pyright" }
+vim.lsp.config("gdscript", {
+  on_attach = nvlsp.on_attach,
+  on_init = nvlsp.on_init,
+  capabilities = capabilities,
+  cmd = vim.lsp.rpc.connect("127.0.0.1", 6005),
+  filetypes = { "gd", "gdscript", "gdscript3" },
+  root_dir = function(bufnr, on_dir)
+    local fname = vim.api.nvim_buf_get_name(bufnr)
+    local start_dir = fname ~= "" and vim.fs.dirname(fname) or vim.uv.cwd()
+    local root = vim.fs.find({ "project.godot", ".git" }, {
+      path = start_dir,
+      upward = true,
+    })[1]
+
+    on_dir(root and vim.fs.dirname(root) or start_dir)
+  end,
+})
+
+for _, server in ipairs { "ts_ls", "vue_ls", "gopls", "rust_analyzer", "pyright", "gdscript" } do
+  pcall(vim.lsp.enable, server)
+end
+
+if vim.v.vim_did_enter == 1 then
+  vim.cmd.doautoall "nvim.lsp.enable FileType"
+else
+  vim.api.nvim_create_autocmd("VimEnter", {
+    once = true,
+    callback = function()
+      vim.cmd.doautoall "nvim.lsp.enable FileType"
+    end,
+  })
+end
 
 if vim.lsp.disable then
   vim.lsp.disable "vtsls"

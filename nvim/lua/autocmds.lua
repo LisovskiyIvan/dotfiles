@@ -1,5 +1,14 @@
 require "nvchad.autocmds"
 
+vim.filetype.add {
+  extension = {
+    gd = "gdscript",
+    gdshader = "gdshader",
+    tscn = "godot_scene",
+    tres = "godot_resource",
+  },
+}
+
 local augroup = vim.api.nvim_create_augroup("AutoSave", { clear = true })
 
 vim.api.nvim_create_autocmd("InsertLeave", {

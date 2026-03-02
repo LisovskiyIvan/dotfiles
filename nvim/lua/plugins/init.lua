@@ -61,7 +61,8 @@ return {
         "html", "css", "go", "rust",
         "javascript", "typescript", "tsx", "jsx",
         "python",
+        "gdscript", "godot_resource", "godot_scene",
       },
     },
-  }, 
+  },
 }
