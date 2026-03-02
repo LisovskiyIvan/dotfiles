@@ -1,0 +1,229 @@
+{
+    // Console
+    "Console Log": {
+        "prefix": "cl",
+        "body": [
+            "console.log($1);"
+        ],
+        "description": "Быстрый console.log"
+    },
+    "Console warn": {
+        "prefix": "cw",
+        "body": [
+            "console.warn($1);"
+        ],
+        "description": "Быстрый console.warn"
+    },
+    "Console Time": {
+        "prefix": "ct",
+        "body": [
+            "console.time('${1:label}');"
+        ],
+        "description": "Быстрый console.time"
+    },
+    "Console TimeEnd": {
+        "prefix": "cte",
+        "body": [
+            "console.timeEnd('${1:label}');"
+        ],
+        "description": "Быстрый console.timeEnd"
+    },
+    // Functions
+    "Arrow Function": {
+        "prefix": "af",
+        "body": [
+            "const ${1:functionName} = (${2:params}) => {",
+            "\t$0",
+            "};"
+        ],
+        "description": "Стрелочная функция"
+    },
+    "Async Arrow Function": {
+        "prefix": "aaf",
+        "body": [
+            "const ${1:functionName} = async (${2:params}) => {",
+            "\t$0",
+            "};"
+        ],
+        "description": "Асинхронная стрелочная функция"
+    },
+    "Try Catch": {
+        "prefix": "tc",
+        "body": [
+            "try {",
+            "\t$0",
+            "} catch (error) {",
+            "\tconsole.error(error);",
+            "}"
+        ],
+        "description": "Блок try-catch"
+    },
+    // Loops
+    "For Loop": {
+        "prefix": "for",
+        "body": [
+            "for (let ${1:i} = 0; $1 < ${2:array}.length; $1++) {",
+            "\t$0",
+            "}"
+        ],
+        "description": "Цикл for"
+    },
+    "ForEach": {
+        "prefix": "fe",
+        "body": [
+            "${1:array}.forEach((${2:item}) => {",
+            "\t$0",
+            "});"
+        ],
+        "description": "Метод forEach"
+    },
+    "ForOf": {
+        "prefix": "fof",
+        "body": [
+            "for (const ${1:item} of ${2:array}) {",
+            "\t$0",
+            "}"
+        ],
+        "description": "Цикл for...of"
+    },
+    "Map": {
+        "prefix": "map",
+        "body": [
+            "${1:array}.map((${2:item}) => ${2:item}$0);"
+        ],
+        "description": "Метод map"
+    },
+    "Filter": {
+        "prefix": "fil",
+        "body": [
+            "${1:array}.filter((${2:item}) => ${2:item}$0);"
+        ],
+        "description": "Метод filter"
+    },
+    "Find": {
+        "prefix": "find",
+        "body": [
+            "${1:array}.find((${2:item}) => ${2:item}$0);"
+        ],
+        "description": "Метод find"
+    },
+    "Some": {
+        "prefix": "some",
+        "body": [
+            "${1:array}.some((${2:item}) => ${2:item}$0);"
+        ],
+        "description": "Метод some"
+    },
+    "Every": {
+        "prefix": "every",
+        "body": [
+            "${1:array}.every((${2:item}) => ${2:item}$0);"
+        ],
+        "description": "Метод every"
+    },
+    "Object keys": {
+        "prefix": "ok",
+        "body": [
+            "Object.keys(${1:object}).forEach((${2:key}) => {",
+            "\t$0",
+            "});"
+        ],
+        "description": "Метод Object.keys"
+    },
+    "Object values": {
+        "prefix": "ov",
+        "body": [
+            "Object.values(${1:object}).forEach((${2:value}) => {",
+            "\t$0",
+            "});"
+        ],
+        "description": "Метод Object.values"
+    },
+    "Object entries": {
+        "prefix": "oe",
+        "body": [
+            "Object.entries(${1:object}).forEach(([${2:key}, ${3:value}]) => {",
+            "\t$0",
+            "});"
+        ],
+        "description": "Метод Object.entries"
+    },
+    "Promise": {
+        "prefix": "pr",
+        "body": [
+            "new Promise((resolve, reject) => {",
+            "\t$0",
+            "});"
+        ],
+        "description": "Создание Promise"
+    },
+    "Async Function": {
+        "prefix": "async",
+        "body": [
+            "async function ${1:functionName}(${2:params}) {",
+            "\t$0",
+            "}"
+        ],
+        "description": "Асинхронная функция"
+    },
+    "Import": {
+        "prefix": "imp",
+        "body": [
+            "import ${1:module} from '${2:path}';"
+        ],
+        "description": "ES6 импорт"
+    },
+    "Export Default": {
+        "prefix": "ed",
+        "body": [
+            "export default ${1:name};"
+        ],
+        "description": "Экспорт по умолчанию"
+    },
+    "Export Default Class": {
+        "prefix": "edc",
+        "body": [
+            "export default class ${1:ClassName} {",
+            "\tconstructor() {}",
+            "}"
+        ],
+        "description": "Экспорт класса по умолчанию"
+    },
+    "Destructuring Assignment": {
+        "prefix": "dest",
+        "body": [
+            "const { ${1:property} } = ${2:object};"
+        ],
+        "description": "Деструктуризация объекта"
+    },
+    "Template Literal": {
+        "prefix": "tl",
+        "body": [
+            "`${${1:expression}}`"
+        ],
+        "description": "Шаблонная строка"
+    },
+    "Set Timeout": {
+        "prefix": "st",
+        "body": [
+            "setTimeout(() => {",
+            "\t$0",
+            "}, ${1:1000});"
+        ],
+        "description": "setTimeout функция"
+    },
+    "Set Interval": {
+        "prefix": "si",
+        "body": [
+            "setInterval(() => {",
+            "\t$0",
+            "}, ${1:1000});"
+        ],
+        "description": "setInterval функция"
+    },
+    "this": {
+        "prefix": ["t", "tg", "tf", "th", "thi", "thin"],
+        "body": "this$0",
+        "description": "this"
+    }
+}

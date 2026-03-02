@@ -1,7 +1,6 @@
-
 [
   {
-     "context": "Editor && (vim_mode == normal|| vim_mode == visual) && !VimWaiting && !menu",
+    "context": "Editor && (vim_mode == normal|| vim_mode == visual) && !VimWaiting && !menu",
     "bindings": {
       // put key-bindings here if you want them to work in normal & visual mode
       // Git
@@ -24,7 +23,7 @@
       // Open recent project
       "space f p": "projects::OpenRecent",
       // Search word under cursor
-      "space s w": "pane::DeploySearch",
+      "space s": "vim::SearchUnderCursor",
 
       // Chat with AI
       "space a c": "agent::ToggleFocus",
@@ -87,13 +86,13 @@
       // File finder
       "space space": "file_finder::Toggle",
       // Project search
-      "space /": "pane::DeploySearch",
+      // "space /": "pane::DeploySearch",
       // TODO: Open other files
       // Show project panel with current file
       "space e": "pane::RevealInProjectPanel",
       "ctrl-c": "editor::Copy",
       "ctrl-v": "editor::Paste",
-      "ctrl-x": "editor::Cut"
+      "ctrl-x": "editor::Cut",
     },
   },
   // Empty pane, set of keybindings that are available when there is no active editor
@@ -104,6 +103,7 @@
       "space space": "file_finder::Toggle",
       // Open recent project
       "space f p": "projects::OpenRecent",
+      "space e": "pane::RevealInProjectPanel",
     },
   },
   // Comment code
@@ -112,6 +112,8 @@
     "bindings": {
       // visual, visual line & visual block modes
       "g c": "editor::ToggleComments",
+      "n": "editor::SelectNext",
+      // "shift n": "editor::SelectPrevious",
     },
   },
   // Better escape
@@ -142,7 +144,7 @@
   {
     "context": "Workspace",
     "bindings": {
-      "ctrl-\\": "terminal_panel::ToggleFocus",
+      "alt-h": "terminal_panel::ToggleFocus",
     },
   },
   {
@@ -152,6 +154,7 @@
       "ctrl-l": "workspace::ActivatePaneRight",
       "ctrl-k": "workspace::ActivatePaneUp",
       "ctrl-j": "workspace::ActivatePaneDown",
+      "alt-h": "workspace::CloseActiveDock",
     },
   },
   // File panel (netrw)
@@ -187,7 +190,8 @@
   },
   {
     "context": "Workspace",
-    "bindings": {      // Map VSCode like keybindings
+    "bindings": {
+      // Map VSCode like keybindings
       "cmd-b": "workspace::ToggleRightDock",
     },
   },
@@ -220,7 +224,7 @@
   {
     "context": "Workspace",
     "bindings": {
-      "space tab": "tab_switcher::Toggle"
-    }
-  }
+      "space tab": "tab_switcher::Toggle",
+    },
+  },
 ]

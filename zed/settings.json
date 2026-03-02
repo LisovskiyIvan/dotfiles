@@ -7,13 +7,30 @@
 // custom settings, run `zed: open default settings` from the
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
+  "lsp": {
+    "vtsls": {
+      "settings": {
+        "typescript": {
+          "updateImportsOnFileMove": {
+            "enabled": "always"
+          }
+        },
+        "javascript": {
+          "updateImportsOnFileMove": {
+            "enabled": "always"
+          }
+        }
+      },
+      "enable_lsp_tasks": true
+    }
+  },
   "relative_line_numbers": "enabled",
   "ui_font_family": ".ZedSans",
   "buffer_font_family": ".ZedMono",
   "terminal": {
     "shell": {
-      "program": "zsh",
-    }
+      "program": "bash",
+    },
   },
   "vim_mode": true,
   "buffer_font_weight": 400.0,
@@ -39,7 +56,7 @@
   "theme": {
     "mode": "dark",
     "light": "One Light",
-    "dark": "Tokyo Night Moon",
+    "dark": "Catppuccin Macchiato (Blur) [Light]",
   },
   "experimental.theme_overrides": {
     "background.image": "path/to/image.jpg",
