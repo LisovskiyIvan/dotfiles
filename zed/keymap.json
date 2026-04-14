@@ -35,6 +35,8 @@
     "context": "Editor && vim_mode == normal && !VimWaiting && !menu",
     "bindings": {
       // put key-bindings here if you want them to work only in normal mode
+      // Buffer search with . (same as /)
+      ".": "buffer_search::Deploy",
       // Window movement bindings
       // Ctrl jklk to move between panes
       "ctrl-h": "workspace::ActivatePaneLeft",
@@ -53,6 +55,7 @@
       "g t": "editor::GoToTypeDefinition",
       "g T": "editor::GoToTypeDefinitionSplit",
       "g r": "editor::FindAllReferences",
+      "f f": "editor::Format",
       "] d": "editor::GoToDiagnostic",
       "[ d": "editor::GoToPreviousDiagnostic",
       // TODO: Go to next/prev error

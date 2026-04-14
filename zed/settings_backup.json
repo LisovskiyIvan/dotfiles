@@ -7,37 +7,33 @@
 // custom settings, run `zed: open default settings` from the
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
-  "text_rendering_mode": "platform_default",
   "edit_predictions": {
-    "provider": "zed",
     "open_ai_compatible_api": {
-      "max_output_tokens": 64,
-    },
+      "max_output_tokens": 64
+    }
   },
   "inlay_hints": {
-    "show_value_hints": true,
-    "enabled": false,
+    "enabled": true
   },
   "vim": {
-    "toggle_relative_line_numbers": false,
+    "toggle_relative_line_numbers": false
   },
-  "format_on_save": "off",
   "lsp": {
     "vtsls": {
       "settings": {
         "typescript": {
           "updateImportsOnFileMove": {
-            "enabled": "always",
-          },
+            "enabled": "always"
+          }
         },
         "javascript": {
           "updateImportsOnFileMove": {
-            "enabled": "always",
-          },
-        },
+            "enabled": "always"
+          }
+        }
       },
-      "enable_lsp_tasks": true,
-    },
+      "enable_lsp_tasks": true
+    }
   },
   "relative_line_numbers": "enabled",
   "ui_font_family": ".ZedSans",
@@ -63,8 +59,8 @@
   "cursor_blink": true,
   "autosave": {
     "after_delay": {
-      "milliseconds": 500
-    }
+      "milliseconds": 500,
+    },
   },
   "file_types": {},
   "soft_wrap": "editor_width",
@@ -76,27 +72,42 @@
     "mode": "dark",
     "light": "One Light",
     "dark": "Catppuccin Macchiato (Blur) [Light]",
-  },
-  "language_models": {
-    "openai_compatible": {
-      "zaika": {
+  },"language_models": {
+      "openai": {
+        "version": 1,
         "api_url": "https://api.z.ai/api/paas/v4",
+        "api_key": "твой_ключ_сюда_zai_sk-XXXXXXXXXXXXXXXXXXXXXXXX",  // ← вставь сюда
         "available_models": [
           {
             "name": "glm-4.7",
-            "max_tokens": 200000,
-            "max_output_tokens": 32000,
-            "max_completion_tokens": 200000,
-            "capabilities": {
-              "tools": true,
-              "images": false,
-              "parallel_tool_calls": false,
-              "prompt_cache_key": false,
-              "chat_completions": true,
-            },
+            "display_name": "GLM-4.7 (Z.ai)",
+            "max_tokens": 200000
           },
+          {
+            "name": "glm-4.6",
+            "display_name": "GLM-4.6 (Z.ai)",
+            "max_tokens": 128000
+          },
+          {
+            "name": "glm-4.5",
+            "display_name": "GLM-4.5 (Z.ai)",
+            "max_tokens": 128000
+          },
+          {
+            "name": "glm-4.5-air",
+            "display_name": "GLM-4.5-Air (быстрее и дешевле)",
+            "max_tokens": 128000
+          }
         ],
-      },
+        "low_speed_timeout_in_seconds": 300
+      }
     },
-  },
+  
+    "assistant": {
+      "version": 2,
+      "default_model": {
+        "provider": "openai",
+        "model": "glm-4.7"
+      }
+    }
 }
