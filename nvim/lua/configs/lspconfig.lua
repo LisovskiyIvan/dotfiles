@@ -19,11 +19,6 @@ vim.lsp.config("ts_ls", {
   capabilities = capabilities,
 })
 
-vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
-  vim.lsp.handlers.signature_help,
-  { focusable = false }
-)
-
 vim.lsp.config("vue_ls", {
   on_attach = nvlsp.on_attach,
   on_init = nvlsp.on_init,

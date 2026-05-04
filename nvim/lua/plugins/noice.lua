@@ -7,9 +7,8 @@ return {
     "rcarriga/nvim-notify",
   },
   config = function(_, opts)
-    vim.notify("Noice config called", vim.log.levels.INFO)
     require("noice").setup(opts)
-    vim.opt.cmdheight = 0
+    vim.opt.cmdheight = vim.g.neovide and 1 or 0
   end,
   opts = {
     cmdline = {
