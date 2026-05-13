@@ -5,8 +5,6 @@ M.enabled = true
 local blocked_filetypes = {
   "NvimTree",
   "neo-tree",
-  "TelescopePrompt",
-  "TelescopeResults",
   "lazy",
   "mason",
   "help",

@@ -67,10 +67,23 @@ map("n", "<leader>uw", function()
   vim.wo.wrap = not vim.wo.wrap
 end, { desc = "Toggle soft wrap" })
 
--- Search
+-- Search (fff)
 map("n", "<leader>s", function()
-  require("telescope.builtin").grep_string { search = vim.fn.expand("<cword>") }
+  require("fff").search_and_show(vim.fn.expand("<cword>"))
 end, { desc = "Search word under cursor" })
+
+-- Override NvChad telescope keymaps with fff/native
+map("n", "<leader>ff", "<cmd>FFFFind<cr>", { desc = "Find files" })
+map("n", "<leader>fa", "<cmd>FFFFind<cr>", { desc = "Find all files" })
+map("n", "<leader>fw", "<cmd>FFFFind<cr>", { desc = "Live grep" })
+map("n", "<leader>fb", "<cmd>buffers<cr>", { desc = "Find buffers" })
+map("n", "<leader>fh", "<cmd>help<cr>", { desc = "Find help" })
+map("n", "<leader>ma", "<cmd>marks<cr>", { desc = "Find marks" })
+map("n", "<leader>fo", "<cmd>browse oldfiles<cr>", { desc = "Recent files" })
+map("n", "<leader>cm", "<cmd>LazyGit<cr>", { desc = "Git commits" })
+map("n", "<leader>gt", "<cmd>LazyGit<cr>", { desc = "Git status" })
+map("n", "<leader>fz", "<nop>", { desc = "Buffer fuzzy (disabled)" })
+map("n", "<leader>pt", "<nop>", { desc = "Pick term (use <A-v>/<A-h>/<A-i>)" })
 
 -- Quickfix
 map("n", "<leader>q", function()

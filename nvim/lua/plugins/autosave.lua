@@ -10,8 +10,6 @@ return {
     local blocked_filetypes = {
       "NvimTree",
       "neo-tree",
-      "TelescopePrompt",
-      "TelescopeResults",
       "lazy",
       "mason",
       "help",

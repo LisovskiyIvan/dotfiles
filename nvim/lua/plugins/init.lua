@@ -25,15 +25,12 @@ return {
     end,
   },
 
+  { "nvim-telescope/telescope.nvim", enabled = false },
+
   {
     "kdheepak/lazygit.nvim",
     lazy = false,
     dependencies = { "nvim-lua/plenary.nvim" },
-  },
-
-  {
-    "fatih/vim-go",
-    ft = "go",
   },
 
   {
@@ -55,6 +52,7 @@ return {
 
   {
     "nvim-treesitter/nvim-treesitter",
+    branch = "main",
     opts = {
       ensure_installed = {
         "vim", "lua", "vimdoc",
