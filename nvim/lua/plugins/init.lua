@@ -60,6 +60,7 @@ return {
         "javascript", "typescript", "tsx", "jsx",
         "python",
         "gdscript", "godot_resource", "godot_scene",
+        "gleam",
       },
     },
   },

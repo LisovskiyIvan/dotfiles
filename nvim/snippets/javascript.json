@@ -1,0 +1,226 @@
+{
+    "Console Log": {
+        "prefix": "cl",
+        "body": [
+            "console.log($1);"
+        ],
+        "description": "Quick console.log"
+    },
+    "Console warn": {
+        "prefix": "cw",
+        "body": [
+            "console.warn($1);"
+        ],
+        "description": "Quick console.warn"
+    },
+    "Console Time": {
+        "prefix": "ct",
+        "body": [
+            "console.time('${1:label}');"
+        ],
+        "description": "Quick console.time"
+    },
+    "Console TimeEnd": {
+        "prefix": "cte",
+        "body": [
+            "console.timeEnd('${1:label}');"
+        ],
+        "description": "Quick console.timeEnd"
+    },
+    "Arrow Function": {
+        "prefix": "af",
+        "body": [
+            "const ${1:functionName} = (${2:params}) => {",
+            "\t$0",
+            "};"
+        ],
+        "description": "Arrow function"
+    },
+    "Async Arrow Function": {
+        "prefix": "aaf",
+        "body": [
+            "const ${1:functionName} = async (${2:params}) => {",
+            "\t$0",
+            "};"
+        ],
+        "description": "Async arrow function"
+    },
+    "Try Catch": {
+        "prefix": "tc",
+        "body": [
+            "try {",
+            "\t$0",
+            "} catch (error) {",
+            "\tconsole.error(error);",
+            "}"
+        ],
+        "description": "try-catch block"
+    },
+    "For Loop": {
+        "prefix": "for",
+        "body": [
+            "for (let ${1:i} = 0; $1 < ${2:array}.length; $1++) {",
+            "\t$0",
+            "}"
+        ],
+        "description": "for loop"
+    },
+    "ForEach": {
+        "prefix": "fe",
+        "body": [
+            "${1:array}.forEach((${2:item}) => {",
+            "\t$0",
+            "});"
+        ],
+        "description": "forEach method"
+    },
+    "ForOf": {
+        "prefix": "fof",
+        "body": [
+            "for (const ${1:item} of ${2:array}) {",
+            "\t$0",
+            "}"
+        ],
+        "description": "for...of loop"
+    },
+    "Map": {
+        "prefix": "map",
+        "body": [
+            "${1:array}.map((${2:item}) => ${2:item}$0);"
+        ],
+        "description": "map method"
+    },
+    "Filter": {
+        "prefix": "fil",
+        "body": [
+            "${1:array}.filter((${2:item}) => ${2:item}$0);"
+        ],
+        "description": "filter method"
+    },
+    "Find": {
+        "prefix": "find",
+        "body": [
+            "${1:array}.find((${2:item}) => ${2:item}$0);"
+        ],
+        "description": "find method"
+    },
+    "Some": {
+        "prefix": "some",
+        "body": [
+            "${1:array}.some((${2:item}) => ${2:item}$0);"
+        ],
+        "description": "some method"
+    },
+    "Every": {
+        "prefix": "every",
+        "body": [
+            "${1:array}.every((${2:item}) => ${2:item}$0);"
+        ],
+        "description": "every method"
+    },
+    "Object keys": {
+        "prefix": "ok",
+        "body": [
+            "Object.keys(${1:object}).forEach((${2:key}) => {",
+            "\t$0",
+            "});"
+        ],
+        "description": "Object.keys method"
+    },
+    "Object values": {
+        "prefix": "ov",
+        "body": [
+            "Object.values(${1:object}).forEach((${2:value}) => {",
+            "\t$0",
+            "});"
+        ],
+        "description": "Object.values method"
+    },
+    "Object entries": {
+        "prefix": "oe",
+        "body": [
+            "Object.entries(${1:object}).forEach(([${2:key}, ${3:value}]) => {",
+            "\t$0",
+            "});"
+        ],
+        "description": "Object.entries method"
+    },
+    "Promise": {
+        "prefix": "pr",
+        "body": [
+            "new Promise((resolve, reject) => {",
+            "\t$0",
+            "});"
+        ],
+        "description": "Create Promise"
+    },
+    "Async Function": {
+        "prefix": "async",
+        "body": [
+            "async function ${1:functionName}(${2:params}) {",
+            "\t$0",
+            "}"
+        ],
+        "description": "Async function"
+    },
+    "Import": {
+        "prefix": "imp",
+        "body": [
+            "import ${1:module} from '${2:path}';"
+        ],
+        "description": "ES6 import"
+    },
+    "Export Default": {
+        "prefix": "ed",
+        "body": [
+            "export default ${1:name};"
+        ],
+        "description": "Default export"
+    },
+    "Export Default Class": {
+        "prefix": "edc",
+        "body": [
+            "export default class ${1:ClassName} {",
+            "\tconstructor() {}",
+            "}"
+        ],
+        "description": "Default class export"
+    },
+    "Destructuring Assignment": {
+        "prefix": "dest",
+        "body": [
+            "const { ${1:property} } = ${2:object};"
+        ],
+        "description": "Object destructuring"
+    },
+    "Template Literal": {
+        "prefix": "tl",
+        "body": [
+            "`${${1:expression}}`"
+        ],
+        "description": "Template literal"
+    },
+    "Set Timeout": {
+        "prefix": "st",
+        "body": [
+            "setTimeout(() => {",
+            "\t$0",
+            "}, ${1:1000});"
+        ],
+        "description": "setTimeout function"
+    },
+    "Set Interval": {
+        "prefix": "si",
+        "body": [
+            "setInterval(() => {",
+            "\t$0",
+            "}, ${1:1000});"
+        ],
+        "description": "setInterval function"
+    },
+    "this": {
+        "prefix": ["t", "tg", "tf", "th", "thi", "thin"],
+        "body": "this$0",
+        "description": "this keyword"
+    }
+}

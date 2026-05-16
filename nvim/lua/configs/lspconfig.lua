@@ -76,7 +76,25 @@ vim.lsp.config("gdscript", {
   end,
 })
 
-for _, server in ipairs { "ts_ls", "vue_ls", "gopls", "rust_analyzer", "pyright", "gdscript" } do
+vim.lsp.config("gleam", {
+  on_attach = nvlsp.on_attach,
+  on_init = nvlsp.on_init,
+  capabilities = capabilities,
+  cmd = { "gleam", "lsp" },
+  filetypes = { "gleam" },
+  root_dir = function(bufnr, on_dir)
+    local fname = vim.api.nvim_buf_get_name(bufnr)
+    local start_dir = fname ~= "" and vim.fs.dirname(fname) or vim.uv.cwd()
+    local root = vim.fs.find({ "gleam.toml", ".git" }, {
+      path = start_dir,
+      upward = true,
+    })[1]
+
+    on_dir(root and vim.fs.dirname(root) or start_dir)
+  end,
+})
+
+for _, server in ipairs { "ts_ls", "vue_ls", "gopls", "rust_analyzer", "pyright", "gdscript", "gleam" } do
   pcall(vim.lsp.enable, server)
 end
 
