@@ -43,6 +43,7 @@ return {
         "rust_analyzer",
         "gopls",
         "pyright",
+        "clangd",
       },
     },
   },
@@ -56,7 +57,7 @@ return {
     opts = {
       ensure_installed = {
         "vim", "lua", "vimdoc",
-        "html", "css", "go", "rust",
+        "html", "css", "c", "go", "rust",
         "javascript", "typescript", "tsx", "jsx",
         "python",
         "gdscript", "godot_resource", "godot_scene",

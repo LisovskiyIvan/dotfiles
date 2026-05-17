@@ -76,6 +76,12 @@ vim.lsp.config("gdscript", {
   end,
 })
 
+vim.lsp.config("clangd", {
+  on_attach = nvlsp.on_attach,
+  on_init = nvlsp.on_init,
+  capabilities = capabilities,
+})
+
 vim.lsp.config("gleam", {
   on_attach = nvlsp.on_attach,
   on_init = nvlsp.on_init,
@@ -94,7 +100,7 @@ vim.lsp.config("gleam", {
   end,
 })
 
-for _, server in ipairs { "ts_ls", "vue_ls", "gopls", "rust_analyzer", "pyright", "gdscript", "gleam" } do
+for _, server in ipairs { "ts_ls", "vue_ls", "gopls", "rust_analyzer", "pyright", "clangd", "gdscript", "gleam" } do
   pcall(vim.lsp.enable, server)
 end
 
