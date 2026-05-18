@@ -67,9 +67,9 @@ map("n", "<leader>uw", function()
   vim.wo.wrap = not vim.wo.wrap
 end, { desc = "Toggle soft wrap" })
 
--- Search (fff)
+-- Search
 map("n", "<leader>s", function()
-  require("fff").search_and_show(vim.fn.expand("<cword>"))
+  vim.fn.feedkeys("/" .. vim.fn.expand("<cword>"), "n")
 end, { desc = "Search word under cursor" })
 
 -- Override NvChad telescope keymaps with fff/native
