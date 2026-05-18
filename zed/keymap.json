@@ -115,8 +115,8 @@
     "bindings": {
       // visual, visual line & visual block modes
       "g c": "editor::ToggleComments",
-      "n": "editor::SelectNext",
-      // "shift n": "editor::SelectPrevious",
+      "m": "editor::SelectNext",
+      "shift m": "editor::SelectPrevious",
     },
   },
   // Better escape
