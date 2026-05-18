@@ -1,24 +1,28 @@
 return {
-  "dmtrkovalenko/fff.nvim",
+  'dmtrKovalenko/fff.nvim',
   build = function()
+    -- downloads a prebuilt binary or falls back to cargo build
     require("fff.download").download_or_build_binary()
   end,
-  cmd = { "FFFFind", "FFFScan" },
+  -- for nixos:
+  -- build = "nix run .#release",
+  -- opts = {
+  --   debug = {
+  --     enabled = true,
+  --     show_scores = true,
+  --   },
+  -- },
+  lazy = false, -- the plugin lazy-initialises itself
   keys = {
-    { "<leader>f", "<cmd>FFFFind<cr>", desc = "Find files (FFF)" },
+    { "ff", function() require('fff').find_files() end, desc = 'FFFind files' },
+    { "fg", function() require('fff').live_grep() end, desc = 'LiFFFe grep' },
+    { "fz",
+      function() require('fff').live_grep({ grep = { modes = { 'fuzzy', 'plain' } } }) end,
+      desc = 'Live fffuzy grep',
+    },
+    { "fc",
+      function() require('fff').live_grep({ query = vim.fn.expand("<cword>") }) end,
+      desc = 'Search current word',
+    },
   },
-  config = function()
-    require("fff").setup({
-      prompt = "> ",
-      title = "Files",
-      layout = {
-        prompt_position = "bottom",
-        preview_position = "right",
-        flex = {
-          size = 100,
-          wrap = "top",
-        },
-      },
-    })
-  end,
 }
