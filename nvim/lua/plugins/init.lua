@@ -15,14 +15,15 @@ return {
 
   {
     "hrsh7th/nvim-cmp",
-    opts = function(_, opts)
-      local cmp = require "cmp"
-
-      opts.mapping = opts.mapping or cmp.mapping.preset.insert()
-      opts.mapping["<Space>"] = nil
-
-      return opts
+    config = function()
+      require("configs.cmp")
     end,
+  },
+
+  { "L3MON4D3/LuaSnip" },
+  {
+    "rafamadriz/friendly-snippets",
+    event = "VeryLazy",
   },
 
   { "nvim-telescope/telescope.nvim", enabled = false },

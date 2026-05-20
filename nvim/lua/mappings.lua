@@ -85,6 +85,14 @@ map("n", "<leader>gt", "<cmd>LazyGit<cr>", { desc = "Git status" })
 map("n", "<leader>fz", "<nop>", { desc = "Buffer fuzzy (disabled)" })
 map("n", "<leader>pt", "<nop>", { desc = "Pick term (use <A-v>/<A-h>/<A-i>)" })
 
+-- Line movement
+map("n", "<A-j>", ":m .+1<cr>==", { desc = "Move line down" })
+map("n", "<A-k>", ":m .-2<cr>==", { desc = "Move line up" })
+
+-- Line movement
+map("n", "<A-j>", ":m .+1<cr>==", { desc = "Move line down" })
+map("n", "<A-k>", ":m .-2<cr>==", { desc = "Move line up" })
+
 -- Quickfix
 map("n", "<leader>q", function()
   vim.cmd("cclose")
