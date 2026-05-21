@@ -67,7 +67,10 @@ require("lazy").setup({
   { import = "plugins" },
 }, lazy_config)
 
--- load theme
+-- load theme (compile if cache missing)
+if not vim.uv.fs_stat(vim.g.base46_cache .. "defaults") then
+  require("base46").load_all_highlights()
+end
 dofile(vim.g.base46_cache .. "defaults")
 dofile(vim.g.base46_cache .. "statusline")
 
