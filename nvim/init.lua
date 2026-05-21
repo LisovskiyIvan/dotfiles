@@ -55,24 +55,39 @@ vim.opt.rtp:prepend(lazypath)
 
 local lazy_config = require "configs.lazy"
 
--- load plugins
-require("lazy").setup({
+local plugins = {
   {
     "NvChad/NvChad",
     lazy = false,
     branch = "v2.5",
     import = "nvchad.plugins",
   },
-
   { import = "plugins" },
-}, lazy_config)
+}
 
--- load theme (compile if cache missing)
+local theme_file = vim.fn.expand("~/.config/omarchy/current/theme/neovim.lua")
+local theme_specs = nil
+if vim.uv.fs_stat(theme_file) then
+  local ok, result = pcall(dofile, theme_file)
+  if ok and type(result) == "table" then
+    theme_specs = result
+    vim.list_extend(plugins, theme_specs)
+  end
+end
+
+require("lazy").setup(plugins, lazy_config)
+
 if not vim.uv.fs_stat(vim.g.base46_cache .. "defaults") then
   require("base46").load_all_highlights()
 end
 dofile(vim.g.base46_cache .. "defaults")
 dofile(vim.g.base46_cache .. "statusline")
+
+if theme_specs and #theme_specs > 0 and theme_specs[1].name then
+  vim.schedule(function()
+    pcall(vim.cmd, "colorscheme " .. theme_specs[1].name)
+  end)
+end
 
 require "options"
 require "autocmds"
