@@ -71,6 +71,17 @@ if vim.uv.fs_stat(theme_file) then
   local ok, result = pcall(dofile, theme_file)
   if ok and type(result) == "table" then
     theme_specs = result
+    for _, spec in ipairs(theme_specs) do
+      if spec.name == "aether" then
+        spec.opts = vim.tbl_deep_extend("force", spec.opts or {}, {
+          transparent = true,
+          styles = {
+            sidebars = "transparent",
+            floats = "transparent",
+          },
+        })
+      end
+    end
     vim.list_extend(plugins, theme_specs)
   end
 end
@@ -86,8 +97,33 @@ dofile(vim.g.base46_cache .. "statusline")
 if theme_specs and #theme_specs > 0 and theme_specs[1].name then
   vim.schedule(function()
     pcall(vim.cmd, "colorscheme " .. theme_specs[1].name)
+    vim.schedule(function()
+      if package.loaded["ibl"] then
+        pcall(package.loaded["ibl"].refresh)
+      end
+    end)
   end)
 end
+
+vim.api.nvim_create_autocmd("ColorScheme", {
+  pattern = "aether",
+  callback = function()
+    vim.schedule(function()
+      vim.api.nvim_set_hl(0, "Normal", { bg = "NONE" })
+      vim.api.nvim_set_hl(0, "NormalNC", { bg = "NONE" })
+      vim.api.nvim_set_hl(0, "NormalFloat", { bg = "NONE" })
+      vim.api.nvim_set_hl(0, "SignColumn", { bg = "NONE" })
+      vim.api.nvim_set_hl(0, "FoldColumn", { bg = "NONE" })
+      vim.api.nvim_set_hl(0, "MsgArea", { bg = "NONE" })
+      vim.api.nvim_set_hl(0, "LineNr", { bg = "NONE" })
+      vim.api.nvim_set_hl(0, "NvimTreeNormal", { bg = "NONE" })
+      vim.api.nvim_set_hl(0, "NvimTreeNormalNC", { bg = "NONE" })
+      if package.loaded["ibl"] then
+        pcall(package.loaded["ibl"].refresh)
+      end
+    end)
+  end,
+})
 
 require "options"
 require "autocmds"
