@@ -100,7 +100,14 @@ vim.lsp.config("gleam", {
   end,
 })
 
-for _, server in ipairs { "ts_ls", "vue_ls", "gopls", "rust_analyzer", "pyright", "clangd", "gdscript", "gleam" } do
+vim.lsp.config("oxlint", {
+  on_attach = nvlsp.on_attach,
+  on_init = nvlsp.on_init,
+  capabilities = capabilities,
+  filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact", "vue" },
+})
+
+for _, server in ipairs { "ts_ls", "vue_ls", "gopls", "rust_analyzer", "pyright", "clangd", "gdscript", "gleam", "oxlint" } do
   pcall(vim.lsp.enable, server)
 end
 

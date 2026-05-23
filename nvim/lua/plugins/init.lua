@@ -45,6 +45,7 @@ return {
         "gopls",
         "pyright",
         "clangd",
+        "oxlint",
       },
     },
   },
