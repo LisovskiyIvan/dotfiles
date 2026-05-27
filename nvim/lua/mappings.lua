@@ -61,6 +61,12 @@ end, { desc = "Next hunk" })
 map("n", "[h", function()
   if vim.wo.diff then vim.cmd("normal! [c") else require("gitsigns").prev_hunk() end
 end, { desc = "Prev hunk" })
+map("n", "<leader>gb", function()
+  require("gitsigns").toggle_current_line_blame()
+end, { desc = "Toggle git blame inline" })
+map("n", "<leader>gB", function()
+  require("gitsigns").blame_line { full = true }
+end, { desc = "Git blame (full)" })
 
 -- UI
 map("n", "<leader>uw", function()

@@ -54,6 +54,21 @@ return {
   -- { import = "nvchad.blink.lazyspec" },
 
   {
+    -- No need to install gitsigns separately — NvChad already provides it.
+    -- This spec only overrides NvChad's default gitsigns options.
+    "lewis6991/gitsigns.nvim",
+    opts = {
+      current_line_blame = true, -- show inline blame on current line
+      current_line_blame_opts = {
+        virt_text = true,
+        virt_text_pos = "eol", -- End Of Line (right-aligned virtual text)
+        delay = 100, -- ms before showing
+        ignore_whitespace = false,
+      },
+    },
+  },
+
+  {
     "nvim-treesitter/nvim-treesitter",
     branch = "main",
     opts = {
