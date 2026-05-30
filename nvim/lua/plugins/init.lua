@@ -62,7 +62,7 @@ return {
       current_line_blame_opts = {
         virt_text = true,
         virt_text_pos = "eol", -- End Of Line (right-aligned virtual text)
-        delay = 100, -- ms before showing
+        delay = 0, -- ms before showing
         ignore_whitespace = false,
       },
     },
