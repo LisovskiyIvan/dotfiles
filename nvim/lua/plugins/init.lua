@@ -72,7 +72,12 @@ return {
       }
       vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "InsertLeave" }, {
         callback = function()
-          lint.try_lint()
+          local root = vim.fs.root(0, { "selene.toml", ".luaurc", ".git" })
+          if root then
+            lint.try_lint(nil, { cwd = root })
+          else
+            lint.try_lint()
+          end
         end,
       })
     end,

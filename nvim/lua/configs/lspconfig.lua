@@ -3,7 +3,8 @@ require("nvchad.configs.lspconfig").defaults()
 local nvlsp = require "nvchad.configs.lspconfig"
 
 local capabilities = vim.deepcopy(nvlsp.capabilities)
-if capabilities.textDocument
+if
+  capabilities.textDocument
   and capabilities.textDocument.completion
   and capabilities.textDocument.completion.completionItem
 then
@@ -12,6 +13,7 @@ end
 
 local mason_path = vim.fn.stdpath "data" .. "/mason"
 local tsdk_path = mason_path .. "/packages/typescript-language-server/node_modules/typescript/lib"
+local roblox_types_path = vim.fn.stdpath "config" .. "/types/globalTypes.d.luau"
 
 vim.lsp.config("ts_ls", {
   on_attach = nvlsp.on_attach,
@@ -104,6 +106,7 @@ vim.lsp.config("luau_lsp", {
   on_attach = nvlsp.on_attach,
   on_init = nvlsp.on_init,
   capabilities = capabilities,
+  cmd = { "luau-lsp", "lsp", "--definitions:@roblox=" .. roblox_types_path },
   filetypes = { "luau" },
   root_dir = function(bufnr, on_dir)
     local fname = vim.api.nvim_buf_get_name(bufnr)
@@ -117,6 +120,14 @@ vim.lsp.config("luau_lsp", {
   end,
   settings = {
     ["luau-lsp"] = {
+      platform = {
+        type = "roblox",
+      },
+      sourcemap = {
+        enabled = true,
+        autogenerate = true,
+        rojoProjectFile = "default.project.json",
+      },
       requireMode = {
         mode = "relativeToFile",
       },
@@ -136,7 +147,18 @@ vim.lsp.config("oxlint", {
   filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact", "vue" },
 })
 
-for _, server in ipairs { "ts_ls", "vue_ls", "gopls", "rust_analyzer", "pyright", "clangd", "gdscript", "gleam", "luau_lsp", "oxlint" } do
+for _, server in ipairs {
+  "ts_ls",
+  "vue_ls",
+  "gopls",
+  "rust_analyzer",
+  "pyright",
+  "clangd",
+  "gdscript",
+  "gleam",
+  "luau_lsp",
+  "oxlint",
+} do
   pcall(vim.lsp.enable, server)
 end
 
