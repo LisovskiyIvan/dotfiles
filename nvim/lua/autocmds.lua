@@ -6,6 +6,7 @@ vim.filetype.add {
     gdshader = "gdshader",
     tscn = "godot_scene",
     tres = "godot_resource",
+    luau = "luau",
   },
 }
 

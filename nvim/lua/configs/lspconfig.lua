@@ -100,6 +100,35 @@ vim.lsp.config("gleam", {
   end,
 })
 
+vim.lsp.config("luau_lsp", {
+  on_attach = nvlsp.on_attach,
+  on_init = nvlsp.on_init,
+  capabilities = capabilities,
+  filetypes = { "luau" },
+  root_dir = function(bufnr, on_dir)
+    local fname = vim.api.nvim_buf_get_name(bufnr)
+    local start_dir = fname ~= "" and vim.fs.dirname(fname) or vim.uv.cwd()
+    local root = vim.fs.find({ ".luaurc", "default.project.json", ".git" }, {
+      path = start_dir,
+      upward = true,
+    })[1]
+
+    on_dir(root and vim.fs.dirname(root) or start_dir)
+  end,
+  settings = {
+    ["luau-lsp"] = {
+      requireMode = {
+        mode = "relativeToFile",
+      },
+      completion = {
+        imports = {
+          enabled = true,
+        },
+      },
+    },
+  },
+})
+
 vim.lsp.config("oxlint", {
   on_attach = nvlsp.on_attach,
   on_init = nvlsp.on_init,
@@ -107,7 +136,7 @@ vim.lsp.config("oxlint", {
   filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact", "vue" },
 })
 
-for _, server in ipairs { "ts_ls", "vue_ls", "gopls", "rust_analyzer", "pyright", "clangd", "gdscript", "gleam", "oxlint" } do
+for _, server in ipairs { "ts_ls", "vue_ls", "gopls", "rust_analyzer", "pyright", "clangd", "gdscript", "gleam", "luau_lsp", "oxlint" } do
   pcall(vim.lsp.enable, server)
 end
 

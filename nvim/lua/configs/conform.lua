@@ -1,6 +1,7 @@
 local options = {
   formatters_by_ft = {
     lua = { "stylua" },
+    luau = { "stylua" },
     python = { "black" },
     javascript = { "oxfmt" },
     javascriptreact = { "oxfmt" },
@@ -8,6 +9,12 @@ local options = {
     typescriptreact = { "oxfmt" },
     -- css = { "prettier" },
     -- html = { "prettier" },
+  },
+
+  formatters = {
+    stylua = {
+      command = vim.fn.stdpath "data" .. "/mason/bin/stylua",
+    },
   },
 
   -- format_on_save = {
