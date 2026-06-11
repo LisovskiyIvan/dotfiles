@@ -92,7 +92,6 @@ vim.api.nvim_create_autocmd({
   "TextChanged",
   "TextChangedI",
   "FocusLost",
-  "BufLeave",
 }, {
   group = augroup,
   callback = function(args)
