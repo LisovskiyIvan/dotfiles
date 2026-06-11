@@ -26,8 +26,6 @@ return {
     event = "VeryLazy",
   },
 
-  { "nvim-telescope/telescope.nvim", enabled = false },
-
   {
     "kdheepak/lazygit.nvim",
     lazy = false,

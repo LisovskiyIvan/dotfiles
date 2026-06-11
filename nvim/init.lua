@@ -91,8 +91,8 @@ require("lazy").setup(plugins, lazy_config)
 if not vim.uv.fs_stat(vim.g.base46_cache .. "defaults") then
   require("base46").load_all_highlights()
 end
-dofile(vim.g.base46_cache .. "defaults")
-dofile(vim.g.base46_cache .. "statusline")
+pcall(dofile, vim.g.base46_cache .. "defaults")
+pcall(dofile, vim.g.base46_cache .. "statusline")
 
 if theme_specs and #theme_specs > 0 and theme_specs[1].name then
   vim.schedule(function()

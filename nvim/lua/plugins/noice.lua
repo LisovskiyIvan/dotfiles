@@ -9,7 +9,7 @@ return {
   config = function(_, opts)
     require("notify").setup({ background_colour = "#000000"})
     require("noice").setup(opts)
-    vim.opt.cmdheight = vim.g.neovide and 1 or 0
+    vim.opt.cmdheight = 1
   end,
   opts = {
     cmdline = {
