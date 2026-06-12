@@ -67,3 +67,95 @@ vim.keymap.set("n", "<leader>as", function()
   autosave.enabled = not autosave.enabled
   vim.notify("AutoSave: " .. (autosave.enabled and "enabled" or "disabled"))
 end, { desc = "Toggle AutoSave" })
+
+local rojo_sourcemap_timers = {}
+
+local function rojo_sourcemap_root(bufnr)
+  return vim.fs.root(bufnr or 0, "default.project.json")
+end
+
+local function rojo_sourcemap_cmd(root)
+  local rojo = vim.fn.exepath "rojo"
+  if rojo == "" then
+    rojo = "/usr/local/bin/rojo"
+  end
+
+  return {
+    rojo,
+    "sourcemap",
+    "default.project.json",
+    "--output",
+    "sourcemap.json",
+  }, { cwd = root }
+end
+
+local function file_contents(path)
+  local file = io.open(path, "r")
+  if not file then
+    return nil
+  end
+
+  local contents = file:read "*a"
+  file:close()
+  return contents
+end
+
+local function generate_rojo_sourcemap(bufnr, notify_success)
+  local root = rojo_sourcemap_root(bufnr)
+  if not root then
+    if notify_success then
+      vim.notify("Rojo sourcemap: default.project.json not found", vim.log.levels.WARN)
+    end
+    return
+  end
+
+  if rojo_sourcemap_timers[root] then
+    rojo_sourcemap_timers[root]:stop()
+    rojo_sourcemap_timers[root]:close()
+  end
+
+  local timer = vim.uv.new_timer()
+  rojo_sourcemap_timers[root] = timer
+  timer:start(500, 0, function()
+    rojo_sourcemap_timers[root] = nil
+    timer:close()
+
+    local sourcemap = root .. "/sourcemap.json"
+    local before = file_contents(sourcemap)
+    local cmd, opts = rojo_sourcemap_cmd(root)
+    vim.system(cmd, opts, function(result)
+      if result.code ~= 0 then
+        vim.schedule(function()
+          vim.notify("Rojo sourcemap failed: " .. (result.stderr or ""), vim.log.levels.ERROR)
+        end)
+      else
+        local after = file_contents(sourcemap)
+        vim.schedule(function()
+          if before ~= after then
+            vim.cmd "silent! lsp restart luau_lsp"
+          end
+
+          if notify_success then
+            vim.notify "Rojo sourcemap generated"
+          end
+        end)
+      end
+    end)
+  end)
+end
+
+vim.api.nvim_create_autocmd("BufWritePost", {
+  group = vim.api.nvim_create_augroup("RojoSourcemap", { clear = true }),
+  pattern = { "*.luau", "default.project.json" },
+  callback = function(args)
+    generate_rojo_sourcemap(args.buf, false)
+  end,
+})
+
+vim.api.nvim_create_user_command("RojoSourcemap", function()
+  generate_rojo_sourcemap(0, true)
+end, {})
+
+vim.api.nvim_create_user_command("RojoRestart", function()
+  vim.cmd "silent! lsp restart luau_lsp"
+end, {})
