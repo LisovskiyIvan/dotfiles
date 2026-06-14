@@ -128,7 +128,7 @@ vim.lsp.config("luau_lsp", {
         autogenerate = false,
         sourcemapFile = "sourcemap.json",
         rojoProjectFile = "default.project.json",
-        rojoPath = "/usr/local/bin/rojo",
+        rojoPath = vim.fn.exepath "rojo",
       },
       completion = {
         imports = {
