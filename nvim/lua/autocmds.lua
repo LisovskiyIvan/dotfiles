@@ -53,7 +53,7 @@ local function save(bufnr)
 end
 
 local augroup = vim.api.nvim_create_augroup("AutoSave", { clear = true })
-vim.api.nvim_create_autocmd({ "InsertLeave", "TextChanged", "TextChangedI", "FocusLost" }, {
+vim.api.nvim_create_autocmd({ "InsertLeave", "TextChanged", "FocusLost" }, {
   group = augroup,
   callback = function(args) save(args.buf) end,
 })

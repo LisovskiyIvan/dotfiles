@@ -114,6 +114,7 @@ return {
         "gleam",
         "luau",
       },
+      indent = { enable = true },
     },
   },
 }
