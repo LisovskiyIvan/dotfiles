@@ -102,6 +102,32 @@ return {
   },
 
   {
+    "nvim-tree/nvim-tree.lua",
+    opts = function()
+      local config = require "nvchad.configs.nvimtree"
+      config.renderer.highlight_git = "all"
+      config.on_attach = function(bufnr)
+        require("nvim-tree.keymap").on_attach_default(bufnr)
+        local api = require "nvim-tree.api"
+        local function opts(desc)
+          return { desc = "nvim-tree: " .. desc, buffer = bufnr, nowait = true }
+        end
+
+        vim.keymap.set("n", ">", function()
+          api.tree.resize { relative = 5 }
+        end, opts "increase width")
+        vim.keymap.set("n", "<", function()
+          api.tree.resize { relative = -5 }
+        end, opts "decrease width")
+        vim.keymap.set("n", "0", function()
+          api.tree.resize { absolute = 30 }
+        end, opts "reset width")
+      end
+      return config
+    end,
+  },
+
+  {
     "nvim-treesitter/nvim-treesitter",
     branch = "main",
     opts = {

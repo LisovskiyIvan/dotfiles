@@ -1,5 +1,13 @@
 require "nvchad.autocmds"
 
+vim.g.lazygit_on_exit_callback = function()
+  vim.cmd "silent! checktime"
+  local ok, api = pcall(require, "nvim-tree.api")
+  if ok then
+    api.tree.reload()
+  end
+end
+
 vim.filetype.add {
   extension = {
     gd = "gdscript",
