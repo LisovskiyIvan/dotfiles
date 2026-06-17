@@ -48,7 +48,7 @@ map("n", "<leader>ti", function()
 end, { desc = "Toggle inlay hints" })
 
 -- Diagnostics
-map("n", "<leader>xx", vim.diagnostic.open_float, { desc = "Diagnostic float" })
+map("n", "<leader>dd", vim.diagnostic.open_float, { desc = "Diagnostic float" })
 
 -- Git
 map("n", "<leader>gg", "<cmd>LazyGit<cr>", { desc = "LazyGit" })
