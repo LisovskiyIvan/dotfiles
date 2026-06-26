@@ -62,6 +62,37 @@ return {
   },
 
   {
+    "HakonHarnes/img-clip.nvim",
+    ft = { "markdown", "norg", "org" },
+    keys = {
+      { "<leader>p", "<cmd>PasteImage<cr>", mode = { "n" }, desc = "Paste clipboard image" },
+    },
+    opts = {
+      default = { dir_path = "assets" },
+    },
+  },
+
+  {
+    "3rd/image.nvim",
+    event = "VeryLazy",
+    opts = {
+      rocks = { hererocks = true },
+      only_render_image_at_cursor = true,
+    },
+  },
+
+  {
+    "MeanderingProgrammer/render-markdown.nvim",
+    ft = "markdown",
+    dependencies = { "nvim-treesitter/nvim-treesitter", "echasnovski/mini.icons" },
+    opts = {
+      link = {
+        image = '', -- не заменять ![](path) иконкой
+      },
+    },
+  },
+
+  {
     "mfussenegger/nvim-lint",
     event = { "BufReadPre", "BufNewFile" },
     config = function()
