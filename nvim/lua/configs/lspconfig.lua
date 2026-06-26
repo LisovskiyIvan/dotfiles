@@ -147,6 +147,31 @@ vim.lsp.config("oxlint", {
   filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact", "vue" },
 })
 
+vim.lsp.config("v_analyzer", {
+  on_attach = nvlsp.on_attach,
+  on_init = nvlsp.on_init,
+  capabilities = capabilities,
+  cmd = { mason_path .. "/packages/v-analyzer/v-analyzer" },
+  filetypes = { "v", "vsh", "vv" },
+  root_dir = function(bufnr, on_dir)
+    local fname = vim.api.nvim_buf_get_name(bufnr)
+    local start_dir = fname ~= "" and vim.fs.dirname(fname) or vim.uv.cwd()
+    local root = vim.fs.find({ "v.mod", ".git" }, {
+      path = start_dir,
+      upward = true,
+    })[1]
+    on_dir(root and vim.fs.dirname(root) or start_dir)
+  end,
+  init_options = {
+    customVrootPath = "/usr/lib/vlang",
+  },
+  settings = {
+    v = {
+      executablePath = "/usr/bin/v",
+    },
+  },
+})
+
 for _, server in ipairs {
   "ts_ls",
   "vue_ls",
@@ -156,6 +181,7 @@ for _, server in ipairs {
   "clangd",
   "gdscript",
   "gleam",
+  "v_analyzer",
   "luau_lsp",
   "oxlint",
 } do
