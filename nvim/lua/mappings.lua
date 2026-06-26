@@ -4,6 +4,12 @@ require "nvchad.mappings"
 
 local map = vim.keymap.set
 
+-- Override NvChad <A-h> (conflicts with Hyprland Alt+H) -> <A-o>
+map({ "n", "t" }, "<A-h>", "<nop>", { desc = "disabled (conflicts with Hyprland)" })
+map({ "n", "t" }, "<A-o>", function()
+  require("nvchad.term").toggle { pos = "sp", id = "htoggleTerm" }
+end, { desc = "terminal toggleable horizontal term" })
+
 local function jump_to_first_definition(opts)
   local item = opts.items[1]
   if not item then
@@ -87,8 +93,8 @@ map("n", "<leader>cm", "<cmd>LazyGit<cr>", { desc = "Git commits" })
 map("n", "<leader>gt", "<cmd>LazyGit<cr>", { desc = "Git status" })
 
 -- Line movement
-map("n", "<A-j>", ":m .+1<cr>==", { desc = "Move line down" })
-map("n", "<A-k>", ":m .-2<cr>==", { desc = "Move line up" })
+map("n", "J", ":m .+1<cr>==", { desc = "Move line down" })
+map("n", "K", ":m .-2<cr>==", { desc = "Move line up" })
 
 -- Quickfix
 map("n", "<leader>q", function()
