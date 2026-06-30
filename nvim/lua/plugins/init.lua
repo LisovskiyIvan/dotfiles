@@ -43,7 +43,7 @@ return {
         "gopls",
         "pyright",
         "clangd",
-        "v_analyzer",
+        -- "v_analyzer", -- patched manually, do not let Mason overwrite
         "luau_lsp",
         "oxlint",
       },
