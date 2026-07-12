@@ -1,0 +1,11 @@
+#!/bin/bash
+THEME_NAME=$1
+NEOVIM_THEME="$HOME/.config/omarchy/current/theme/neovim.lua"
+
+if [[ -f $NEOVIM_THEME ]]; then
+  if ! grep -q 'transparent\s*=\s*true' "$NEOVIM_THEME"; then
+    sed -i '/^    opts = {/a\      transparent = true,\n      styles = {\n        sidebars = "transparent",\n        floats = "transparent",\n      },' "$NEOVIM_THEME"
+  fi
+fi
+
+notify-send "Theme: $THEME_NAME" "Applied" 2>/dev/null &

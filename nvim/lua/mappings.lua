@@ -101,3 +101,8 @@ map("n", "<leader>q", function()
   vim.cmd("cclose")
   vim.cmd("lclose")
 end, { desc = "Close quickfix & loclist" })
+
+
+-- hover
+map("n", "<leader>h", "<nop>", { desc = "disable neochad s" })
+map("n", "<leader>h", vim.lsp.buf.hover, { desc = "LSP hover" })
