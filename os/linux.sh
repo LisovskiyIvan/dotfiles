@@ -7,6 +7,9 @@ CONFIG_TARGETS=(
   # Git
   ".gitconfig::${HOME}/.gitconfig"
 
+  # Lazygit
+  "lazygit/config.yml::${HOME}/.config/lazygit/config.yml"
+
   # Tmux
   "tmux/tmux.conf::${HOME}/.config/tmux/tmux.conf"
 
