@@ -76,6 +76,7 @@ return {
   {
     "3rd/image.nvim",
     event = "VeryLazy",
+    cond = not vim.g.neovide,
     opts = {
       rocks = { hererocks = true },
       only_render_image_at_cursor = true,

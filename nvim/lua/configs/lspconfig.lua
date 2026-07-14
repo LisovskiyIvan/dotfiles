@@ -2,6 +2,10 @@ require("nvchad.configs.lspconfig").defaults()
 
 local nvlsp = require "nvchad.configs.lspconfig"
 
+if vim.lsp.disable then
+  vim.lsp.disable "vtsls"
+end
+
 local capabilities = vim.deepcopy(nvlsp.capabilities)
 if
   capabilities.textDocument
@@ -12,13 +16,21 @@ then
 end
 
 local mason_path = vim.fn.stdpath "data" .. "/mason"
-local tsdk_path = mason_path .. "/packages/typescript-language-server/node_modules/typescript/lib"
+local packages_path = mason_path .. "/packages/typescript-language-server/node_modules"
+local tsdk_path = packages_path .. "/typescript/lib"
 local roblox_types_path = vim.fn.stdpath "config" .. "/types/globalTypes.d.luau"
 
 vim.lsp.config("ts_ls", {
   on_attach = nvlsp.on_attach,
   on_init = nvlsp.on_init,
   capabilities = capabilities,
+  cmd = { "node", packages_path .. "/typescript-language-server/lib/cli.mjs", "--stdio" },
+  init_options = {
+    hostInfo = "neovim",
+    tsserver = {
+      path = tsdk_path,
+    },
+  },
 })
 
 vim.lsp.config("vue_ls", {
@@ -197,10 +209,6 @@ else
       vim.cmd.doautoall "nvim.lsp.enable FileType"
     end,
   })
-end
-
-if vim.lsp.disable then
-  vim.lsp.disable "vtsls"
 end
 
 -- Configure path and @/ alias resolution for gf command
