@@ -149,7 +149,7 @@
   {
     "context": "Workspace",
     "bindings": {
-      "alt-h": "terminal_panel::ToggleFocus",
+      "alt-o": "terminal_panel::ToggleFocus",
     },
   },
   {
@@ -159,7 +159,7 @@
       "ctrl-l": "workspace::ActivatePaneRight",
       "ctrl-k": "workspace::ActivatePaneUp",
       "ctrl-j": "workspace::ActivatePaneDown",
-      "alt-h": "workspace::CloseActiveDock",
+      "alt-o": "workspace::CloseActiveDock",
     },
   },
   // File panel (netrw)
@@ -173,6 +173,10 @@
       "x": "project_panel::Cut",
       "c": "project_panel::Copy",
       "p": "project_panel::Paste",
+      // Tab toggles folder expand/collapse (opens files), do NOT cycle buffers
+      "tab": "project_panel::Open",
+      // Shift-Tab: do nothing in project panel
+      "shift-tab": null,
       // Close project panel as project file panel on the right
       "q": "workspace::ToggleRightDock",
       "space e": "workspace::ToggleRightDock",
