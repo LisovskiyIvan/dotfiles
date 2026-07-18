@@ -55,7 +55,11 @@
       "g t": "editor::GoToTypeDefinition",
       "g T": "editor::GoToTypeDefinitionSplit",
       "g r": "editor::FindAllReferences",
-      "f f": "editor::Format",
+      // File finding & grep (fff-style)
+      "f f": "file_finder::Toggle",
+      "f g": "pane::DeploySearch",
+      "f z": "pane::DeploySearch",
+      "f c": "vim::SearchUnderCursor",
       "] d": "editor::GoToDiagnostic",
       "[ d": "editor::GoToPreviousDiagnostic",
       // TODO: Go to next/prev error
@@ -64,6 +68,8 @@
       // Symbol search
       "s s": "outline::Toggle",
       "s S": "project_symbols::Toggle",
+      // LSP hover
+      "space h": "editor::Hover",
       // Diagnostic
       "space x x": "diagnostics::Deploy",
 
@@ -76,14 +82,17 @@
 
       // + Buffers
       // Switch between buffers
-      "shift-h": "pane::ActivatePreviousItem",
-      "shift-l": "pane::ActivateNextItem",
+      "tab": "pane::ActivateNextItem",
+      "shift-tab": "pane::ActivatePreviousItem",
       // Close active panel
       "shift-q": "pane::CloseActiveItem",
       "ctrl-q": "pane::CloseActiveItem",
       "space x": "pane::CloseActiveItem",
       // Close other items
       "space b o": "pane::CloseOtherItems",
+      // Move line
+      "shift-j": "editor::MoveLineDown",
+      "shift-k": "editor::MoveLineUp",
       // Save file
       "ctrl-s": "workspace::Save",
       // File finder
@@ -127,20 +136,13 @@
       "j k": "vim::NormalBefore", // remap jk in insert mode to escape
     },
   },
-  // Rename
+  // Operator-pending c{char} extensions
   {
     "context": "Editor && vim_operator == c",
     "bindings": {
       "c": "vim::CurrentLine",
-      "r": "editor::Rename", // zed specific
-    },
-  },
-  // Code Action
-  {
-    "context": "Editor && vim_operator == c",
-    "bindings": {
-      "c": "vim::CurrentLine",
-      "a": "editor::ToggleCodeActions", // zed specific
+      "r": "editor::Rename",
+      "a": "editor::ToggleCodeActions",
     },
   },
   // Toggle terminal
@@ -225,10 +227,4 @@
   //   }
   // }
 
-  {
-    "context": "Workspace",
-    "bindings": {
-      "space tab": "tab_switcher::Toggle",
-    },
-  },
 ]
