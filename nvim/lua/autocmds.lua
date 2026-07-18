@@ -167,3 +167,9 @@ end, {})
 vim.api.nvim_create_user_command("RojoRestart", function()
   vim.cmd "silent! lsp restart luau_lsp"
 end, {})
+
+vim.api.nvim_create_autocmd("SwapExists", {
+  callback = function()
+    vim.v.swapchoice = "e"
+  end,
+})
