@@ -48,6 +48,7 @@
       "space c a": "editor::ToggleCodeActions",
       "space .": "editor::ToggleCodeActions",
       "space c r": "editor::Rename",
+      "space f m": "editor::Format",
       "g d": "editor::GoToDefinition",
       "g D": "editor::GoToDefinitionSplit",
       "g i": "editor::GoToImplementation",
@@ -211,12 +212,11 @@
       "space r t": ["editor::SpawnNearestTask", { "reveal": "no_focus" }],
     },
   },
-  // Sneak motion
+  // Helix-style jump
   {
     "context": "vim_mode == normal || vim_mode == visual",
     "bindings": {
-      "s": ["vim::PushSneak", {}],
-      "S": ["vim::PushSneakBackward", {}],
+      "s": "vim::HelixJumpToWord",
     },
   },
   
