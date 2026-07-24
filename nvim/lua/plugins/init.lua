@@ -46,6 +46,7 @@ return {
         -- "v_analyzer", -- patched manually, do not let Mason overwrite
         "luau_lsp",
         "oxlint",
+        "ols",
       },
     },
   },
@@ -171,6 +172,8 @@ return {
         "python",
         "gdscript", "godot_resource", "godot_scene",
         "gleam",
+        "odin",
+        "c3",
         "luau",
         "v",
       },

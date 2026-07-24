@@ -159,6 +159,40 @@ vim.lsp.config("oxlint", {
   filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact", "vue" },
 })
 
+vim.lsp.config("ols", {
+  on_attach = nvlsp.on_attach,
+  on_init = nvlsp.on_init,
+  capabilities = capabilities,
+  cmd = { "ols" },
+  filetypes = { "odin" },
+  root_dir = function(bufnr, on_dir)
+    local fname = vim.api.nvim_buf_get_name(bufnr)
+    local start_dir = fname ~= "" and vim.fs.dirname(fname) or vim.uv.cwd()
+    local root = vim.fs.find({ ".git" }, {
+      path = start_dir,
+      upward = true,
+    })[1]
+    on_dir(root and vim.fs.dirname(root) or start_dir)
+  end,
+})
+
+vim.lsp.config("c3lsp", {
+  on_attach = nvlsp.on_attach,
+  on_init = nvlsp.on_init,
+  capabilities = capabilities,
+  cmd = { "c3-lsp" },
+  filetypes = { "c3", "c3i" },
+  root_dir = function(bufnr, on_dir)
+    local fname = vim.api.nvim_buf_get_name(bufnr)
+    local start_dir = fname ~= "" and vim.fs.dirname(fname) or vim.uv.cwd()
+    local root = vim.fs.find({ "project.json", ".git" }, {
+      path = start_dir,
+      upward = true,
+    })[1]
+    on_dir(root and vim.fs.dirname(root) or start_dir)
+  end,
+})
+
 vim.lsp.config("v_analyzer", {
   on_attach = nvlsp.on_attach,
   on_init = nvlsp.on_init,
@@ -193,8 +227,10 @@ for _, server in ipairs {
   "clangd",
   "gdscript",
   "gleam",
+  "c3lsp",
   "v_analyzer",
   "luau_lsp",
+  "ols",
   "oxlint",
 } do
   pcall(vim.lsp.enable, server)

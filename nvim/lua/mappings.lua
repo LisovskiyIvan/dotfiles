@@ -106,3 +106,8 @@ end, { desc = "Close quickfix & loclist" })
 -- hover
 map("n", "<leader>h", "<nop>", { desc = "disable neochad s" })
 map("n", "<leader>h", vim.lsp.buf.hover, { desc = "LSP hover" })
+local function builtin_rename()
+  vim.lsp.buf.rename(nil, {})
+end
+map("n", "<leader>rn", builtin_rename, { desc = "LSP rename" })
+map("n", "<leader>ra", builtin_rename, { desc = "LSP rename" })
