@@ -120,6 +120,13 @@ return {
   -- test new blink
   -- { import = "nvchad.blink.lazyspec" },
 
+  -- Multi-cursor (like VSCode Ctrl+D / Zed editor::SelectNext)
+  {
+    "mg979/vim-visual-multi",
+    branch = "master",
+    lazy = false,
+  },
+
   {
     -- No need to install gitsigns separately — NvChad already provides it.
     -- This spec only overrides NvChad's default gitsigns options.

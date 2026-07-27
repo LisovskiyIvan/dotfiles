@@ -103,6 +103,35 @@ map("n", "<leader>q", function()
 end, { desc = "Close quickfix & loclist" })
 
 
+-- Multi-cursor: select next/prev occurrence (visual mode) — like Zed editor::SelectNext
+local function visual_select_next()
+  vim.cmd('normal! y')
+  vim.fn['vm#commands#find_under'](1, 0)
+  vim.fn['vm#commands#find_next'](0, 0)
+end
+local function visual_select_prev()
+  vim.cmd('normal! y')
+  vim.fn['vm#commands#find_under'](1, 0)
+  vim.fn['vm#commands#find_prev'](0, 0)
+end
+map("x", "n", visual_select_next, { desc = "Select next occurrence" })
+map("x", "N", visual_select_prev, { desc = "Select previous occurrence" })
+-- Normal mode: m/M also add occurrences when VM is active (passthrough otherwise)
+-- map("n", "m", function()
+--   if vim.fn.exists('b:VM_Selection') == 1 then
+--     return '<Cmd>call vm#commands#find_next(0, 0)<CR>'
+--   else
+--     return 'm'
+--   end
+-- end, { expr = true, remap = false, desc = "VM: select next" })
+-- map("n", "M", function()
+--   if vim.fn.exists('b:VM_Selection') == 1 then
+--     return '<Cmd>call vm#commands#find_prev(0, 0)<CR>'
+--   else
+--     return 'M'
+--   end
+-- end, { expr = true, remap = false, desc = "VM: select previous" })
+--
 -- hover
 map("n", "<leader>h", "<nop>", { desc = "disable neochad s" })
 map("n", "<leader>h", vim.lsp.buf.hover, { desc = "LSP hover" })
