@@ -1,4 +1,5 @@
 require("nvchad.configs.lspconfig").defaults()
+require("configs.lsp-fix") -- workaround for Neovim 0.12 LSP cursor out-of-range bug
 
 local nvlsp = require "nvchad.configs.lspconfig"
 
