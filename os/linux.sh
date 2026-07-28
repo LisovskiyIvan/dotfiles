@@ -21,6 +21,9 @@ CONFIG_TARGETS=(
   # Ghostty
   "ghostty::${HOME}/.config/ghostty"
 
+  # Herdr
+  "herdr/config.toml::${HOME}/.config/herdr/config.toml"
+
 
   # Omarchy hooks, extensions, branding (individual files — NOT whole omarchy dir)
   "omarchy/hooks/theme-set::${HOME}/.config/omarchy/hooks/theme-set"

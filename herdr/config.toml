@@ -1,0 +1,20 @@
+onboarding = false
+[ui]
+agent_panel_sort = "priority"
+
+show_agent_labels_on_pane_borders = false
+[keys]
+prefix = "ctrl+a"
+
+[theme]
+name = "rose-pine"
+auto_switch = false
+
+[ui.sound]
+enabled = true
+
+[ui.toast]
+delivery = "system"
+
+[experimental]
+switch_ascii_input_source_in_prefix = false
