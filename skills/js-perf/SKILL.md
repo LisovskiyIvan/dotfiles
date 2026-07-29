@@ -26,7 +26,7 @@ Scan JS/TS for performance anti-patterns. Focus on hot paths — loops, frequent
 | `Array.reduce` on large arrays | `.reduce(` especially with object accumulator | Classic `for` loop — reduce is 10x slower on V8 |
 | Layout thrashing (browser) | Interleaved read (`offsetHeight`, `getBoundingClientRect`) and write (`style.*`, `className`) in a loop | Batch all reads first, then all writes. Use `requestAnimationFrame` for write batching |
 | Object spread `{...obj}` in hot loop | `{...obj, key: val}` inside `for` / `.map()` / `.reduce()` body | Mutate in place: `obj.key = val`. For immutability, use `Object.assign` on preallocated target |
-| Destructuring `{a,b}` in hot loop | `for (const {x,y} of arr)` or `arr.map(({x,y}) => ...)` | Direct `.x` / `.y` access on the source object. Destructuring creates intermediate object per iteration |
+| Destructuring `{a,b}` in hot loop | `for (const {x,y} of arr)` or `arr.map(({x,y}) => ...)` | 🟡 Minor: direct `.x`/`.y` is ~same speed on modern engines. Not worth rewriting unless profiling shows otherwise |
 | Sequential `await` in loop for independent work | `for (const u of urls) { await fetch(u) }` | `await Promise.all(urls.map(fetch))` — N× latency vs 1× latency |
 | Missing debounce/throttle on frequent events | Handler on `scroll`, `resize`, `input`, `mousemove` with no rate limit | `debounce(fn, 150)` for search/input; `throttle(fn, 16)` for scroll/resize |
 | Closure/arrow created per iteration | `arr.map(x => { const cb = (y) => ...; return cb(x) })` — new function object each iteration | Hoist the closure outside the loop. Each allocation adds GC pressure in hot paths |
@@ -39,7 +39,7 @@ Scan JS/TS for performance anti-patterns. Focus on hot paths — loops, frequent
 | `Math.floor(x)` in tight loop | `Math.floor(` inside loop body | `x \| 0` (unsigned) or `~~x` (signed) — 1.4-1.8x faster |
 | `let sum = 0; for(...) sum += ...` | Single accumulator in sum loop | Unroll x4 with 4 accumulators for ILP: `s0+=a[i]; s1+=a[i+1]; s2+=a[i+2]; s3+=a[i+3]` |
 | Reading `.length` each iteration | `i < arr.length` in loop condition | Cache: `for (let i=0, len=arr.length; i<len; i++)` — matters for plain Array, not TypedArray |
-| `...spread` to copy arrays | `[...arr]` for arrays >1000 items | `arr.slice()` or manual for loop |
+| `...spread` to copy arrays | `[...arr]` for arrays >1000 items | 🟡 Minor: `[...arr]` is equal or faster than `slice()` in modern engines (Bun: 3x faster spread, Node: ~equal). Only micro-optimize if profiling shows it matters |
 | String `+=` in loop (big strings) | Accumulating string with `+=` in loop | Array `.push()` + `.join('')` for >100 concats |
 | `innerHTML` in loop (browser) | `el.innerHTML += html` or setting `innerHTML` repeatedly in loop | `el.textContent = str` for text; `el.insertAdjacentHTML('beforeend', html)` for HTML; `DocumentFragment` for batch DOM |
 | DOM insert in loop without fragment (browser) | `parent.appendChild(child)` inside loop | Build in `DocumentFragment`, then single `appendChild(fragment)` — 1 reflow vs N reflows |
@@ -50,7 +50,8 @@ Scan JS/TS for performance anti-patterns. Focus on hot paths — loops, frequent
 | `requestAnimationFrame` not used for animation (browser) | `setTimeout(fn, 16)` or `setInterval` for visual updates | `requestAnimationFrame(fn)` — synced to vsync, no jank, pauses when tab hidden |
 | Missing `AbortController` for fetch | `fetch(url)` with no cancellation — response may arrive after component unmount | `const ctrl = new AbortController(); fetch(url, {signal: ctrl.signal}); ctrl.abort()` on cleanup |
 | Deep clone via JSON round-trip | `JSON.parse(JSON.stringify(obj))` for large/deep objects | `structuredClone(obj)` — ~2-3x faster, handles cycles, Dates, Maps, ArrayBuffers |
-| Optional chaining `?.` in tight loop | `obj?.prop?.nested` inside loop body | Hoist the null check: `const v = obj?.prop; if (!v) return; for (...) v.nested`. Avoids repeated null checks per iteration |
+| `regex.test()` for substring existence check | `re.test(str)` when `str.includes(sub)` would work | `str.includes(sub)` — 4x-13x faster. Regex compile + match overhead vs direct string scan. Use regex only when you need pattern matching, not literal substrings |
+| Optional chaining `?.` in tight loop | `obj?.prop?.nested` inside loop body | 🔵 V8-only (5x penalty). Bun: no penalty. Hoist null check for V8: `const v = obj?.prop; if (!v) return; for (...) v.nested` |
 | Default parameters in hot function | `function hot(x = expensiveDefault())` — `expensiveDefault` runs every call | Hoist default: `const DEF = expensiveDefault(); function hot(x = DEF)`. V8 also generates extra branching for `undefined` check |
 
 ### 🔵 V8 DEOPT TRIGGERS (hard to measure, systemic slowdown)
@@ -59,9 +60,9 @@ Scan JS/TS for performance anti-patterns. Focus on hot paths — loops, frequent
 |---|---|---|
 | Mixed-argument types to same function | `fn(1)` then `fn("a")` → polymorphic → megamorphic | One function = one argument shape. Use separate functions or ensure same type |
 | Adding/removing object props dynamically | Different hidden classes per object | Initialize all fields upfront, even if `null`. Use `class` not ad-hoc `{}` |
-| `delete obj.prop` | Destroys hidden class, falls back to dictionary mode | Set to `null`/`undefined` instead |
+| `delete obj.prop` | Destroys hidden class, falls back to dictionary mode | 🔵 V8-only (~300x penalty!). Bun: no penalty. For V8, set to `null`/`undefined` instead |
 | Constructor returning different shapes | `if(cond) this.x=1; else this.y=2` → 2 hidden classes | Always assign all fields in constructor, same order |
-| `try/catch` inside hot loop | Blocks JIT optimizations in the `try` block | Move try/catch outside the loop |
+| `try/catch` inside hot loop | Blocks JIT optimizations in the `try` block | 🔵 V8-only (6.7x penalty). Bun: JIT handles it, no penalty. For V8, move try/catch outside the loop |
 | `arguments` object in hot function | Prevents optimization in older V8, leaks | Use rest params `...args` instead |
 | `eval()` or `new Function()` anywhere | Deopts entire containing function | Never in hot code; isolate in cold path |
 | `for...in` on arrays | Enumerates prototype chain, slow | `for (let i=0; i<arr.length; i++)` or `Object.keys()` for objects |
@@ -106,9 +107,9 @@ Scan JS/TS for performance anti-patterns. Focus on hot paths — loops, frequent
 |---|---|---|
 | Math/numeric arrays | `Float32Array` / `Float64Array` | `number[]` — 2x slower, GC pressure |
 | Vector math (vec3, etc.) | Flat `Float32Array` + stride access | Object `{x,y,z}` per element |
-| Small key-value (frequent read) | `Map` | `Object` (hidden class churn) |
+| Small key-value (frequent read) | `Object` (with fixed shape) | `Map` — in V8, Map.get is ~35x slower than Object.key access. Bun: Map and Object are equal. If target is V8/Node and keys are known strings, use Object |
 | Fixed-size queue | Ring buffer over preallocated TypedArray | `array.push()` / `array.shift()` |
-| Lookup by ID | `Map<number, T>` | `array.find()` — O(n) vs O(1) |
+| Lookup by ID | `Map<number, T>` or `Object` with numeric keys | `array.find()` — O(n) vs O(1). For V8, `Object[id]` is faster than `Map.get(id)` for integer keys. For Bun, both equal. `Set.has(id)` is also O(1) — ~300x faster than `Array.includes(id)` |
 | Immutable updates in hot path | Mutate in place, or prealloc + copy | Spread `{...obj, key: val}` in loop |
 | Set operations (union, intersection) | `Set` with `for...of` | `Array.filter`/`includes` — O(n²) vs O(n) |
 | LRU / fixed-size cache | `Map` with manual eviction (Map preserves insertion order) | Object with `delete` + manual size tracking |
@@ -117,6 +118,13 @@ Scan JS/TS for performance anti-patterns. Focus on hot paths — loops, frequent
 ## Browser-Specific Notes (V8 / Chrome)
 
 - **Bun's JIT is more aggressive** than V8 at inlining `forEach`/`reduce`. Code that flies in Bun may crawl in Chrome.
+- **Bun vs V8 divergences** (always measure on target runtime):
+  - `try/catch` inside loop: V8 = 6.7x penalty, Bun = no penalty (JIT handles it).
+  - `delete obj.prop`: V8 = ~300x penalty (hidden class destroyed), Bun = no penalty.
+  - Optional chaining `?.`: V8 = ~5x penalty, Bun = no penalty.
+  - `Map.get()` vs `Object.key`: V8 = Map 35x slower than Object, Bun = identical perf.
+  - `[...arr]` vs `slice()`: Bun = spread 3x faster than slice, Node = ~equal.
+  - `regex.test()` vs `str.includes()`: Node = 13x penalty for regex, Bun = 4x penalty.
 - **V8 escape analysis** is excellent — don't manually "reuse" objects, V8 stack-allocates short-lived ones better than you can pool them.
 - **`|0` truncation**: V8 optimizes `(x | 0)` well, but only for 32-bit int range. For large numbers it deopts. Use `Math.trunc` if values exceed 2^31.
 - **Inline callbacks**: V8 inlines small callbacks at call sites. Don't extract trivial functions — let V8 inline.

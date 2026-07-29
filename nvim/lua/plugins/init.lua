@@ -38,7 +38,6 @@ return {
     dependencies = { "nvim-lspconfig" },
     opts = {
       ensure_installed = {
-        "ts_ls",
         "rust_analyzer",
         "gopls",
         "pyright",
@@ -48,6 +47,9 @@ return {
         "oxlint",
         "ols",
       },
+      -- tsgo isn't a Mason package (install via `npm i -g @typescript/native-preview`),
+      -- and we must stop Mason from auto-enabling the installed typescript-language-server.
+      automatic_enable = { exclude = { "ts_ls" } },
     },
   },
 

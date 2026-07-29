@@ -21,17 +21,10 @@ local packages_path = mason_path .. "/packages/typescript-language-server/node_m
 local tsdk_path = packages_path .. "/typescript/lib"
 local roblox_types_path = vim.fn.stdpath "config" .. "/types/globalTypes.d.luau"
 
-vim.lsp.config("ts_ls", {
+vim.lsp.config("tsgo", {
   on_attach = nvlsp.on_attach,
   on_init = nvlsp.on_init,
   capabilities = capabilities,
-  cmd = { "node", packages_path .. "/typescript-language-server/lib/cli.mjs", "--stdio" },
-  init_options = {
-    hostInfo = "neovim",
-    tsserver = {
-      path = tsdk_path,
-    },
-  },
 })
 
 vim.lsp.config("vue_ls", {
@@ -220,7 +213,7 @@ vim.lsp.config("v_analyzer", {
 })
 
 for _, server in ipairs {
-  "ts_ls",
+  "tsgo",
   "vue_ls",
   "gopls",
   "rust_analyzer",
