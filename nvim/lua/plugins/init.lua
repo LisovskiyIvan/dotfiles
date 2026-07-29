@@ -144,6 +144,24 @@ return {
     },
   },
 
+  -- Three-way diff / merge view (supplants fugitive for conflict work)
+  {
+    "sindrets/diffview.nvim",
+    dependencies = { "nvim-lua/plenary.nvim" },
+    keys = {
+      { "<leader>dd", "<cmd>DiffviewOpen<cr>", desc = "Diffview: open" },
+      { "q", "<cmd>DiffviewClose<cr>", mode = { "n" }, desc = "Diffview: close" },
+    },
+    cmd = { "DiffviewOpen", "DiffviewClose", "DiffviewFileHistory" },
+  },
+
+  -- Visual conflict markers + keymaps (co/ct/cb/c0)
+  {
+    "akinsho/git-conflict.nvim",
+    version = "*",
+    config = true,
+  },
+
   {
     "nvim-tree/nvim-tree.lua",
     opts = function()

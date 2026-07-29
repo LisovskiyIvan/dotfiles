@@ -53,9 +53,6 @@ map("n", "<leader>ti", function()
   vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
 end, { desc = "Toggle inlay hints" })
 
--- Diagnostics
-map("n", "<leader>dd", vim.diagnostic.open_float, { desc = "Diagnostic float" })
-
 -- Git
 map("n", "<leader>gg", "<cmd>LazyGit<cr>", { desc = "LazyGit" })
 map("n", "<leader>ghd", function()
