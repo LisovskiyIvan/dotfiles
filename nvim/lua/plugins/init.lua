@@ -36,13 +36,35 @@ return {
     "NeogitOrg/neogit",
     lazy = true,
     dependencies = {
-      "sindrets/diffview.nvim",  -- optional
+      "esmuellert/codediff.nvim", -- optional
       "nvim-telescope/telescope.nvim", -- optional
     },
     cmd = "Neogit",
     keys = {
       { "<leader>ng", "<cmd>Neogit<cr>", desc = "Neogit UI" },
       { "<leader>ncp", "<cmd>Neogit commit popup<cr>", desc = "Neogit commit" },
+    },
+    opts = {
+      diff_viewer = "codediff",
+      mappings = {
+        status = {
+          ["<tab>"] = "GoToNextHunkHeader",
+          ["<s-tab>"] = "GoToPreviousHunkHeader",
+        },
+      },
+    },
+  },
+
+  {
+    "esmuellert/codediff.nvim",
+    lazy = true,
+    opts = {
+      keymaps = {
+        view = {
+          next_hunk = "<Tab>",
+          prev_hunk = "<S-Tab>",
+        },
+      },
     },
   },
 
@@ -156,17 +178,6 @@ return {
         ignore_whitespace = false,
       },
     },
-  },
-
-  -- Three-way diff / merge view (supplants fugitive for conflict work)
-  {
-    "sindrets/diffview.nvim",
-    dependencies = { "nvim-lua/plenary.nvim" },
-    keys = {
-      { "<leader>dd", "<cmd>DiffviewOpen<cr>", desc = "Diffview: open" },
-      { "q", "<cmd>DiffviewClose<cr>", mode = { "n" }, desc = "Diffview: close" },
-    },
-    cmd = { "DiffviewOpen", "DiffviewClose", "DiffviewFileHistory" },
   },
 
   -- Visual conflict markers + keymaps (co/ct/cb/c0)
