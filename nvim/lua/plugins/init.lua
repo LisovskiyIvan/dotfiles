@@ -33,6 +33,20 @@ return {
   },
 
   {
+    "NeogitOrg/neogit",
+    lazy = true,
+    dependencies = {
+      "sindrets/diffview.nvim",  -- optional
+      "nvim-telescope/telescope.nvim", -- optional
+    },
+    cmd = "Neogit",
+    keys = {
+      { "<leader>ng", "<cmd>Neogit<cr>", desc = "Neogit UI" },
+      { "<leader>ncp", "<cmd>Neogit commit popup<cr>", desc = "Neogit commit" },
+    },
+  },
+
+  {
     "williamboman/mason-lspconfig.nvim",
     event = "VeryLazy",
     dependencies = { "nvim-lspconfig" },
