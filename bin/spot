@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BIN="${SPOTIFY_PLAYER:-$(command -v spotify_player || true)}"
+
+if [ -z "$BIN" ]; then
+  echo "spotify_player binary not found" >&2
+  exit 1
+fi
+
+if [ "${1:-}" = "stop" ]; then
+  pkill -f "spotify_player" || true
+  exit 0
+fi
+
+if ! pgrep -f "spotify_player -d" >/dev/null; then
+  nohup "$BIN" -d >/dev/null 2>&1 &
+  disown
+fi
+
+exec "$BIN" "$@"

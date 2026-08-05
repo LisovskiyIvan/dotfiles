@@ -29,3 +29,6 @@
 	email = daymedead.dev@gmail.com
 [credential]
 	helper = store
+
+[includeIf "gitdir:~/dev/work/new.editor.mir.1t.ru/"]
+	path = ~/.config/git/config-mir1t

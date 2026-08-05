@@ -6,6 +6,7 @@ CONFIG_TARGETS=(
 
   # Git
   ".gitconfig::${HOME}/.gitconfig"
+  "git/config-mir1t::${HOME}/.config/git/config-mir1t"
 
   # Lazygit
   "lazygit/config.yml::${HOME}/.config/lazygit/config.yml"
@@ -27,6 +28,9 @@ CONFIG_TARGETS=(
 
   # Omarchy hooks, extensions, branding (individual files — NOT whole omarchy dir)
   "omarchy/hooks/theme-set::${HOME}/.config/omarchy/hooks/theme-set"
+
+  # Opencode
+  "opencode::${HOME}/.config/opencode"
 )
 
 # keyd is NOT auto-deployed — it requires sudo to write to /etc/keyd/

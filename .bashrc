@@ -28,7 +28,6 @@ alias gstp='git stash pop'
 alias gm='git merge'
 alias ga='git add .'
 alias g='git'
-alias gpsh='f() { if [ -z "$1" ]; then echo "Ошибка: укажите сообщение коммита"; else git add . && git commit -m "$1" && git push; fi }; f'
 alias gl='git log --oneline --graph --decorate --all'
 
 # History de-dup and sync
@@ -36,15 +35,15 @@ HISTCONTROL=ignoredups:erasedups
 shopt -s histappend
 PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND; }history -a; history -n"
 
+alias vlang='command v'
 alias v='nvim'
 alias vn='neovide --fork'
-alias a='helix'
 alias ll='ls -la'
 alias ..='cd ..'
 alias cls='clear'
 alias zed='zeditor'
-alias wu='sudo openvpn ~/Downloads/client.ovpn'
-alias wd='sudo pkill openvpn'
+alias wu='nmcli connection up client'
+alias wd='nmcli connection down client'
 alias cr='cargo run'
 alias cbr='cargo build release'
 
@@ -62,5 +61,13 @@ export PATH="$HOME/.cargo/bin:$PATH"
 export PATH="$HOME/.grok/bin:$PATH"
 # <<< grok installer <<<
 
-# mimocode
-export PATH=/home/dayme/.mimocode/bin:$PATH
+
+
+
+# Added by Antigravity CLI installer
+export PATH="/home/dayme/.local/bin:$PATH"
+
+# Load opencode secrets
+if [ -f "$HOME/dev/myself/dotfiles/opencode/.env" ]; then
+    export $(grep -v '^#' "$HOME/dev/myself/dotfiles/opencode/.env" | xargs)
+fi

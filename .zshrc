@@ -15,7 +15,6 @@ alias gstp='git stash pop'
 alias gm='git merge'
 alias ga='git add .'
 alias g='git'
-alias gpsh='f() { if [ -z "$1" ]; then echo "Ошибка: укажите сообщение коммита"; else git add . && git commit -m "$1" && git push; fi }; f'
 alias gl="git log --oneline --graph --decorate --all"
 
 # Убрать дубликаты из истории
@@ -31,26 +30,7 @@ alias ll='ls -la'
 alias ..='cd ..'
 alias cls='clear'
 
-# Windows/Cygwin specific settings
-if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
-    alias w='zed Z:/dev/work/new.editor.mir.1t.ru/src/player'
-
-    CYGWIN_PATH=$(echo $PATH | tr ':' '\n' | grep -v "^/usr/bin$" | tr '\n' ':')
-    export PATH="/c/Program Files/Git/mingw64/bin:$PATH"
-
-    # Универсальная функция перехода на диск
-    # Использование: c, d, z, e
-    to_drive() {
-        if [ -d "/$1" ]; then
-            cd /$1
-        elif [ -d "/cygdrive/$1" ]; then
-            cd /cygdrive/$1
-        else
-            echo "Диск $1 не найден"
-        fi
-    }
-
-    # Создаем короткие команды
-    alias c='to_drive c'
-    alias z='to_drive z'
+# Load opencode secrets
+if [ -f "$HOME/dev/myself/dotfiles/opencode/.env" ]; then
+    export $(grep -v '^#' "$HOME/dev/myself/dotfiles/opencode/.env" | xargs)
 fi
