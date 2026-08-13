@@ -71,3 +71,4 @@ export PATH="/home/dayme/.local/bin:$PATH"
 if [ -f "$HOME/dev/myself/dotfiles/opencode/.env" ]; then
     export $(grep -v '^#' "$HOME/dev/myself/dotfiles/opencode/.env" | xargs)
 fi
+alias codex="nohup codex-desktop >/dev/null 2>&1 &"
