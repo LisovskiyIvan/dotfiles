@@ -5,4 +5,5 @@ CONFIG_TARGETS=(
   "zed::${HOME}/Library/Application Support/Zed"
   ".wezterm.lua::${HOME}/.wezterm.lua"
   ".zshrc::${HOME}/.zshrc"
+  ".aerospace.toml::${HOME}/.aerospace.toml"
 )

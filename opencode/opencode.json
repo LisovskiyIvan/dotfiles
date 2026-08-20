@@ -20,7 +20,7 @@
     }
   },
   "instructions": [
-    "/home/dayme/.config/opencode/rules/*.md"
+    "rules/*.md"
   ],
 "provider": {
 }, 

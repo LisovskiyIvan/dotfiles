@@ -193,7 +193,7 @@ return {
       local config = require "nvchad.configs.nvimtree"
       config.renderer.highlight_git = "all"
       config.on_attach = function(bufnr)
-        require("nvim-tree.keymap").on_attach_default(bufnr)
+        require("nvim-tree.keymap").default_on_attach(bufnr)
         local api = require "nvim-tree.api"
         local function opts(desc)
           return { desc = "nvim-tree: " .. desc, buffer = bufnr, nowait = true }
