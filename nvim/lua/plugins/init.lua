@@ -215,7 +215,11 @@ return {
 
   {
     "nvim-treesitter/nvim-treesitter",
-    branch = "main",
+    -- master is archived/frozen but required for NvChad v2.5 compatibility.
+    -- Neovim 0.12 incompatibility is patched via lua/configs/treesitter-patch.lua
+    -- To migrate to new `main` branch (breaking rewrite), see:
+    -- https://github.com/nvim-treesitter/nvim-treesitter/blob/main/README.md
+    branch = "master",
     opts = {
       ensure_installed = {
         "vim", "lua", "vimdoc",
@@ -231,5 +235,10 @@ return {
       },
       indent = { enable = true },
     },
+    -- Ensure patch is applied even if plugin is lazy-loaded
+    init = function()
+      -- load patch early; the module itself also handles LazyLoad autocmd
+      pcall(require, "configs.treesitter-patch")
+    end,
   },
 }

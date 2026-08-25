@@ -229,17 +229,8 @@ for _, server in ipairs {
 } do
   pcall(vim.lsp.enable, server)
 end
-
-if vim.v.vim_did_enter == 1 then
-  vim.cmd.doautoall "nvim.lsp.enable FileType"
-else
-  vim.api.nvim_create_autocmd("VimEnter", {
-    once = true,
-    callback = function()
-      vim.cmd.doautoall "nvim.lsp.enable FileType"
-    end,
-  })
-end
+-- 0.12: vim.lsp.enable() авто-стартует на FileType, doautoall больше не нужен
+-- Оставлен только для обратной совместимости с 0.11, в 0.12 можно удалить блок выше
 
 -- Configure path and @/ alias resolution for gf command
 vim.opt.path = { ".", "..", "src", "src/**" }

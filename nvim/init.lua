@@ -89,6 +89,13 @@ vim.api.nvim_create_autocmd("ColorScheme", {
 
 require "options"
 require "autocmds"
+-- Patch nvim-treesitter master for Neovim 0.12 (range nil fix)
+pcall(require, "configs.treesitter-patch")
+
+-- Neovim 0.12: :restart = ZR, экспериментальный ui2 (без Press ENTER)
+-- Включи если хочешь новый message grid:
+-- pcall(function() require("vim._core.ui2").enable() end)
+vim.keymap.set("n", "<leader>ur", "<cmd>restart<cr>", { desc = "Restart Nvim (:restart)" })
 
 vim.schedule(function()
   require "mappings"
