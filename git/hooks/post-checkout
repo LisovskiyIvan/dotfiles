@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# post-checkout hook: symlink src/player/public contents (except *.html) from main worktree
+# Runs on git checkout / git worktree add (via herdr). Safe to run repeatedly.
+set -uo pipefail
+
+# Only proceed if git is available
+if ! command -v git >/dev/null 2>&1; then
+  exit 0
+fi
+
+# Resolve current worktree top-level (absolute)
+WT_TOP="$(git rev-parse --path-format=absolute --show-toplevel 2>/dev/null || true)"
+if [[ -z "$WT_TOP" || ! -d "$WT_TOP" ]]; then
+  # fallback to pwd if not in git repo
+  WT_TOP="$(pwd)"
+fi
+
+# Resolve common git dir (absolute) -> main repo .git
+COMMON_DIR="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true)"
+if [[ -z "$COMMON_DIR" || ! -e "$COMMON_DIR" ]]; then
+  exit 0
+fi
+
+MAIN_ROOT="$(dirname "$COMMON_DIR")"
+
+SRC_PUBLIC="$MAIN_ROOT/src/player/public"
+DST_PUBLIC="$WT_TOP/src/player/public"
+
+# If we are in main worktree, nothing to do
+if [[ "$SRC_PUBLIC" == "$DST_PUBLIC" ]]; then
+  exit 0
+fi
+
+# If source doesn't exist, nothing to do
+if [[ ! -d "$SRC_PUBLIC" ]]; then
+  exit 0
+fi
+
+# Ensure destination exists
+mkdir -p "$DST_PUBLIC" 2>/dev/null || exit 0
+
+# Iterate over top-level entries in SRC_PUBLIC
+# Use find to avoid glob pitfalls with spaces? Simple loop is fine.
+# nullglob ensures empty doesn't produce literal pattern
+shopt -s nullglob 2>/dev/null || true
+# Do not use dotglob - we skip hidden files explicitly
+for src_path in "$SRC_PUBLIC"/*; do
+  # src_path may not exist if glob had no matches
+  [[ -e "$src_path" || -L "$src_path" ]] || continue
+  base="$(basename "$src_path")"
+
+  # skip hidden and .DS_Store
+  [[ "$base" == .* ]] && continue
+  [[ "$base" == ".DS_Store" ]] && continue
+
+  # skip html files case-insensitive: *.html
+  # Use lowercase comparison
+  lower_base="$(printf '%s' "$base" | tr '[:upper:]' '[:lower:]')"
+  if [[ "$lower_base" == *.html ]]; then
+    continue
+  fi
+
+  dest_path="$DST_PUBLIC/$base"
+
+  # If destination already exists (file, dir or symlink), don't overwrite
+  # This preserves tracked files like styles/, newPhysEngine/ that exist via git checkout
+  if [[ -e "$dest_path" || -L "$dest_path" ]]; then
+    continue
+  fi
+
+  # Create symlink with absolute source for robustness
+  if ln -s "$src_path" "$dest_path" 2>/dev/null; then
+    echo "post-checkout: linked $base -> $src_path" >&2
+  fi
+done
+shopt -u nullglob 2>/dev/null || true
+
+exit 0

@@ -30,5 +30,7 @@
 [credential]
 	helper = store
 
-[includeIf "gitdir:~/dev/work/new.editor.mir.1t.ru/"]
-	path = ~/.config/git/config-mir1t
+[includeIf "gitdir:/Users/ivan/dev/work/new.editor.mir.1t.ru/"]
+	path = /Users/ivan/.config/git/config-mir1t
+[includeIf "gitdir:/Users/ivan/dev/work/new.editor.mir.1t.ru/.git/worktrees/"]
+	path = /Users/ivan/.config/git/config-mir1t

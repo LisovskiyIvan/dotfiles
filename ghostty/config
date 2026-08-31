@@ -16,21 +16,29 @@ resize-overlay = never
 # Cursor
 cursor-style = block
 cursor-style-blink = false
-background-opacity = 0.75
 # Cursor styling + SSH session terminfo
 # (all shell integration options must be passed together)
-shell-integration-features = no-cursor,ssh-env
+# NOTE: На Ghostty 1.1.3 доступны только cursor,sudo,title.
+# ssh-env/ssh-terminfo появились в >=1.2 (PR #7608).
+# Для новой версии используй: shell-integration-features = no-cursor,ssh-env,ssh-terminfo
+shell-integration-features = no-cursor
 
 # Keyboard
 keybind = shift+insert=paste_from_clipboard
 keybind = control+insert=copy_to_clipboard
-keybind = super+control+shift+alt+arrow_down=resize_split:down,100
-keybind = super+control+shift+alt+arrow_up=resize_split:up,100
-keybind = super+control+shift+alt+arrow_left=resize_split:left,100
-keybind = super+control+shift+alt+arrow_right=resize_split:right,100
+keybind = super+control+shift+alt+down=resize_split:down,100
+keybind = super+control+shift+alt+up=resize_split:up,100
+keybind = super+control+shift+alt+left=resize_split:left,100
+keybind = super+control+shift+alt+right=resize_split:right,100
 
 # Slowdown mouse scrolling
 mouse-scroll-multiplier = 0.95
 
 # Fix general slowness on hyprland (https://github.com/ghostty-org/ghostty/discussions/3224)
-async-backend = epoll
+# NOTE: async-backend — только для Linux (io_uring/epoll), на macOS даёт "unknown field".
+# Для Linux раскомментируй здесь ИЛИ вынеси в config.linux (см. ниже).
+# async-backend = epoll
+
+# Linux-специфичный оверрайд — подхватится только если файл существует
+# На Linux: ghostty/config.linux будет скопирован в ~/.config/ghostty/config.linux
+config-file = ?"~/.config/ghostty/config.linux"
