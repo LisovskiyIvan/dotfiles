@@ -52,3 +52,7 @@ alias tree='eza -T --icons'
 
 # bun completions
 [ -s "/Users/ivan/.bun/_bun" ] && source "/Users/ivan/.bun/_bun"
+
+
+# Added by Antigravity CLI installer
+export PATH="/Users/ivan/.local/bin:$PATH"

@@ -80,8 +80,9 @@ cmd-shift-tab = 'move-workspace-to-monitor --wrap-around next'
 cmd-f     = 'macos-native-fullscreen'
 cmd-space = 'layout floating tiling'
 
-# close
+# close / quit
 cmd-q = 'close'
+cmd-w = ['close', 'exec-and-forget osascript -e "tell application (path to frontmost application as text) to quit"']
 
 # service mode (resize, join, etc.)
 cmd-shift-semicolon = 'mode service'

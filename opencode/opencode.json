@@ -27,8 +27,8 @@
 "agent": {
     "build": { "disable": false },
     "plan": { "disable": true },
-    "general": { "model": "opencode-go/muse-spark-1.2-contributor" },
-    "explore": { "model": "opencode-go/muse-spark-1.2-contributor" },
-    "scout": { "model": "opencode-go/muse-spark-1.2-contributor" }
+    "general": { "model": "opencode-go/muse-spark-1.3-contributor" },
+    "explore": { "model": "opencode-go/muse-spark-1.3-contributor" },
+    "scout": { "model": "opencode-go/muse-spark-1.3-contributor" }
   }
 }
