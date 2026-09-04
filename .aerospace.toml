@@ -82,7 +82,7 @@ cmd-space = 'layout floating tiling'
 
 # close / quit
 cmd-q = 'close'
-cmd-w = ['close', 'exec-and-forget osascript -e "tell application (path to frontmost application as text) to quit"']
+cmd-w = "exec-and-forget osascript -e 'set frontApp to path to frontmost application as text' -e 'if frontApp contains \"Finder.app\" then' -e 'tell application \"Finder\" to close front window' -e 'else' -e 'try' -e 'tell application frontApp to quit' -e 'end try' -e 'end if'"
 
 # service mode (resize, join, etc.)
 cmd-shift-semicolon = 'mode service'
