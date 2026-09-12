@@ -1,6 +1,7 @@
 #!/bin/bash
 
 SERVERS=(
+  "130.17.19.115:1231:89b197db-3939-40a8-adbe-9e09646458f6:addons.mozilla.org:FFf3VF64DgISXkk4wNcHfXUP6EH2aMtqOGM0oJVZsnc"
 )
 
 SINGBOX="sing-box"
