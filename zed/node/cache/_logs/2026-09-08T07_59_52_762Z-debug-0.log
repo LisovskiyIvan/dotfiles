@@ -1,0 +1,40 @@
+0 verbose cli /opt/homebrew/Cellar/node/26.7.0/bin/node /opt/homebrew/bin/npm
+1 info using npm@11.19.0
+2 info using node@v26.7.0
+3 silly config load:file:/opt/homebrew/lib/node_modules/npm/npmrc
+4 silly config load:file:/Users/ivan/Library/Application Support/Zed/prettier/.npmrc
+5 silly config load:file:/Users/ivan/.npmrc
+6 silly config load:file:/Users/ivan/Library/Application Support/Zed/prettier/etc/npmrc
+7 verbose title npm install prettier@latest
+8 verbose argv "--prefix" "/Users/ivan/Library/Application Support/Zed/prettier" "install" "--cache" "/Users/ivan/Library/Application Support/Zed/node/cache" "prettier@latest" "--save-exact" "--fetch-retry-mintimeout" "2000" "--fetch-retry-maxtimeout" "5000" "--fetch-timeout" "5000"
+9 verbose logfile logs-max:10 dir:/Users/ivan/Library/Application Support/Zed/node/cache/_logs/2026-09-08T07_59_52_762Z-
+10 verbose logfile /Users/ivan/Library/Application Support/Zed/node/cache/_logs/2026-09-08T07_59_52_762Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly install-scripts no package.json at prefix Could not read package.json: Error: ENOENT: no such file or directory, open '/Users/ivan/Library/Application Support/Zed/prettier/package.json'
+13 silly packumentCache heap:4395630592 maxSize:1098907648 maxEntrySize:549453824
+14 silly packumentCache corgi:https://registry.npmjs.org/prettier cache-miss
+15 http fetch GET 200 https://registry.npmjs.org/npm 640ms
+16 http fetch GET 200 https://registry.npmjs.org/prettier 734ms (cache miss)
+17 silly packumentCache corgi:https://registry.npmjs.org/prettier set size:undefined disposed:false
+18 silly idealTree buildDeps
+19 silly fetch manifest prettier@3.9.6
+20 silly packumentCache full:https://registry.npmjs.org/prettier cache-miss
+21 http fetch GET 200 https://registry.npmjs.org/prettier 201ms (cache miss)
+22 silly packumentCache full:https://registry.npmjs.org/prettier set size:undefined disposed:false
+23 silly placeDep ROOT prettier@3.9.6 OK for:  want: 3.9.6
+24 silly reify moves {}
+25 http cache prettier@https://registry.npmjs.org/prettier/-/prettier-3.9.6.tgz 0ms (cache hit)
+26 silly tarball no local data for prettier@https://registry.npmjs.org/prettier/-/prettier-3.9.6.tgz. Extracting by manifest.
+27 http fetch GET 200 https://registry.npmjs.org/prettier/-/prettier-3.9.6.tgz 1057ms (cache miss)
+28 silly ADD node_modules/prettier
+29 verbose cwd /Users/ivan/dev/myself/dotfiles/zed/prettier
+30 verbose os Darwin 25.6.0
+31 verbose node v26.7.0
+32 verbose npm  v11.19.0
+33 notice
+33 notice New major version of npm available! 11.19.0 -> 12.0.2
+33 notice Changelog: https://github.com/npm/cli/releases/tag/v12.0.2
+33 notice To update run: npm install -g npm@12.0.2
+33 notice  { force: true, Symbol(proc-log.meta): true }
+34 verbose exit 0
+35 info ok

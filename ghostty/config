@@ -24,6 +24,10 @@ cursor-style-blink = false
 shell-integration-features = no-cursor
 
 # Keyboard
+# macOS: Option как Alt, иначе <A-i>/<A-o> в Neovim не доходят
+# (по дефолту Option вставляет ˆ/ø). left = левый Option как Alt,
+# правый остаётся для символов. На Linux игнорируется.
+macos-option-as-alt = left
 keybind = shift+insert=paste_from_clipboard
 keybind = control+insert=copy_to_clipboard
 # Legacy encoding sends Alt+Shift+Enter the same as Alt+Enter; send CSI-u so tmux can match M-S-Enter.

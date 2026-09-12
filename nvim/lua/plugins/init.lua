@@ -78,6 +78,7 @@ return {
         "gopls",
         "pyright",
         "clangd",
+        "zls",
         -- "v_analyzer", -- patched manually, do not let Mason overwrite
         "luau_lsp",
         "oxlint",
@@ -223,7 +224,7 @@ return {
     opts = {
       ensure_installed = {
         "vim", "lua", "vimdoc",
-        "html", "css", "c", "go", "rust",
+        "html", "css", "c", "go", "rust", "zig",
         "javascript", "typescript", "tsx", "jsx",
         "python",
         "gdscript", "godot_resource", "godot_scene",

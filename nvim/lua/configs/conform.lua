@@ -7,6 +7,7 @@ local options = {
     javascriptreact = { "oxfmt" },
     typescript = { "oxfmt" },
     typescriptreact = { "oxfmt" },
+    zig = { "zigfmt" },
     -- css = { "prettier" },
     -- html = { "prettier" },
   },

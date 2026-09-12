@@ -90,6 +90,12 @@ vim.lsp.config("clangd", {
   capabilities = capabilities,
 })
 
+vim.lsp.config("zls", {
+  on_attach = nvlsp.on_attach,
+  on_init = nvlsp.on_init,
+  capabilities = capabilities,
+})
+
 vim.lsp.config("gleam", {
   on_attach = nvlsp.on_attach,
   on_init = nvlsp.on_init,
@@ -219,6 +225,7 @@ for _, server in ipairs {
   "rust_analyzer",
   "pyright",
   "clangd",
+  "zls",
   "gdscript",
   "gleam",
   "c3lsp",
