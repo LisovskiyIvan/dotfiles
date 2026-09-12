@@ -22,9 +22,11 @@ CONFIG_TARGETS=(
   # Ghostty
   "ghostty::${HOME}/.config/ghostty"
 
-  # Herdr
+  # Herdr (only config — runtime files like *.sock/*.log stay local)
   "herdr/config.toml::${HOME}/.config/herdr/config.toml"
 
+  # Agents (opencode/crush compatible)
+  ".agents::${HOME}/.agents"
 
   # Omarchy hooks, extensions, branding (individual files — NOT whole omarchy dir)
   "omarchy/hooks/theme-set::${HOME}/.config/omarchy/hooks/theme-set"
