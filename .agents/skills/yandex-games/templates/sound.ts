@@ -27,6 +27,30 @@ class SoundManager {
     this.isMuted = muted;
   }
 
+  /**
+   * Lifecycle: pause ALL audio (focus loss, tab switch, ad open).
+   * Suspends the shared AudioContext so scheduled oscillators/noise stop.
+   * Safe to call when context was never created (no-op).
+   */
+  public pauseAll(): void {
+    if (this.ctx && this.ctx.state === 'running') {
+      this.ctx.suspend().catch(() => {});
+    }
+  }
+
+  /**
+   * Lifecycle: resume audio (focus regained, ad closed).
+   * Does NOT unmute a user-muted game and never creates a context
+   * outside a user gesture — call only from focus/ad-close handlers
+   * after the first interaction.
+   */
+  public resumeAll(): void {
+    if (this.isMuted) return;
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
+    }
+  }
+
   // --- Sound Effects ---
 
   /** Jump / Bounce squish */

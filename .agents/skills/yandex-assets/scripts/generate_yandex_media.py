@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-generate_yandex_media.py
+generate_yandex_media.py (yandex-assets skill)
 Generates promotional graphics and gameplay videos for Yandex Games submissions.
 
 Requirements:
@@ -11,10 +11,12 @@ Requirements:
 Outputs generated in yandex/:
 - icon_512.png (512x512)
 - cover_800x470.png (800x470)
-- screenshots/desktop_1..4.png (1280x720)
-- screenshots/mobile_1..2.png (720x1280)
-- video/gameplay_horizontal.mp4 (1280x720, H.264)
-- video/gameplay_vertical.mp4 (720x1280, H.264)
+- screenshots/desktop_1..4.png (1280x720, 16:9)
+- screenshots/mobile_1..2.png (1280x720, 16:9 — portrait is FORBIDDEN)
+- video/gameplay_horizontal.mp4 (1280x720, 16:9, H.264)
+- video/gameplay_vertical.mp4 (720x1280, 9:16, H.264)
+
+RULE: ALL screenshots are 16:9 landscape, including the mobile slots.
 """
 
 import os
@@ -28,6 +30,9 @@ from PIL import Image, ImageDraw, ImageFont
 OUTPUT_DIR = "yandex"
 SCREENSHOTS_DIR = os.path.join(OUTPUT_DIR, "screenshots")
 VIDEO_DIR = os.path.join(OUTPUT_DIR, "video")
+
+# All screenshots are 16:9 landscape — no portrait sizes allowed.
+SCREENSHOT_W, SCREENSHOT_H = 1280, 720
 
 # Ensure target directories exist
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -156,26 +161,26 @@ def create_cover(title="GAME TITLE", subtitle="ОФИЦИАЛЬНАЯ ВЕРСИ
     im.save(out_path)
     print(f"Saved {out_path}")
 
-def render_game_scene(w, h, hud_title, score, lives, highlight_text=None, is_mobile=False):
+def render_game_scene(w, h, hud_title, score, lives, highlight_text=None):
     im = create_gradient_bg(w, h, (35, 45, 65), (15, 20, 30))
-    draw_retro_grid(im, spacing=35 if is_mobile else 50, color=(255, 255, 255, 15))
+    draw_retro_grid(im, spacing=50, color=(255, 255, 255, 15))
     draw = ImageDraw.Draw(im)
 
     # Top HUD
-    hud_h = 90 if is_mobile else 80
+    hud_h = 80
     hud = Image.new("RGBA", (w - 40, hud_h), (20, 20, 25, 230))
     h_draw = ImageDraw.Draw(hud)
     draw_beveled_border(h_draw, 0, 0, w - 40, hud_h, light="#888888", dark="#111111", thickness=4)
     im.paste(hud, (20, 20), hud)
 
-    f_hud = find_font(16 if is_mobile else 18)
-    f_val = find_font(20 if is_mobile else 22)
+    f_hud = find_font(18)
+    f_val = find_font(22)
     draw.text((45, 40), hud_title, font=f_hud, fill="#ffff55")
     draw.text((45, 68), f"СЧЁТ: {score}  |  РЕКОРД: 9999", font=f_val, fill="#55ff55")
 
     # Center game board or arena
-    arena_w = w - 80 if is_mobile else 600
-    arena_h = h - 260 if is_mobile else 400
+    arena_w = 600
+    arena_h = 400
     ax = (w - arena_w) // 2
     ay = 130
     arena = Image.new("RGBA", (arena_w, arena_h), (25, 25, 35, 220))
@@ -202,9 +207,55 @@ def render_game_scene(w, h, hud_title, score, lives, highlight_text=None, is_mob
 
     return im
 
+def render_vertical_gameplay_frame(w, h, score, highlight_text=None):
+    """Single animated frame for the vertical (9:16) promo video only.
+
+    NOTE: this is video-only. Screenshots must stay 16:9 (see create_screenshots).
+    """
+    im = create_gradient_bg(w, h, (35, 45, 65), (15, 20, 30))
+    draw_retro_grid(im, spacing=35, color=(255, 255, 255, 15))
+    draw = ImageDraw.Draw(im)
+
+    hud_h = 90
+    hud = Image.new("RGBA", (w - 40, hud_h), (20, 20, 25, 230))
+    h_draw = ImageDraw.Draw(hud)
+    draw_beveled_border(h_draw, 0, 0, w - 40, hud_h, light="#888888", dark="#111111", thickness=4)
+    im.paste(hud, (20, 20), hud)
+
+    f_hud = find_font(16)
+    f_val = find_font(20)
+    draw.text((45, 40), "ГЕЙМПЛЕЙ", font=f_hud, fill="#ffff55")
+    draw.text((45, 68), f"СЧЁТ: {score}", font=f_val, fill="#55ff55")
+
+    arena_w = w - 80
+    arena_h = h - 260
+    ax = (w - arena_w) // 2
+    ay = 130
+    arena = Image.new("RGBA", (arena_w, arena_h), (25, 25, 35, 220))
+    a_draw = ImageDraw.Draw(arena)
+    draw_beveled_border(a_draw, 0, 0, arena_w, arena_h, light="#55aa55", dark="#113311", thickness=5)
+    im.paste(arena, (ax, ay), arena)
+
+    draw = ImageDraw.Draw(im)
+    cx, cy = ax + arena_w // 2, ay + arena_h // 2
+    draw.ellipse([cx - 40, cy - 40, cx + 40, cy + 40], fill="#54fb54", outline="#ffffff", width=3)
+
+    if highlight_text:
+        bw, bh = min(w - 60, 480), 80
+        bx = (w - bw) // 2
+        by = ay + arena_h // 2 - 40
+        banner = Image.new("RGBA", (bw, bh), (10, 10, 15, 245))
+        b_draw = ImageDraw.Draw(banner)
+        draw_beveled_border(b_draw, 0, 0, bw, bh, light="#ff5555", dark="#330000", thickness=5)
+        f_pop = find_font(22)
+        b_draw.text((bw // 2, bh // 2), highlight_text, font=f_pop, fill="#ffff55", anchor="mm")
+        im.paste(banner, (bx, by), banner)
+
+    return im
+
 def create_screenshots():
-    print("Generating screenshots...")
-    # Desktop (1280x720)
+    print("Generating screenshots (ALL 16:9, including mobile slots)...")
+    # Desktop (1280x720, 16:9)
     scenes = [
         ("desktop_1_gameplay.png", "УРОВЕНЬ 1", 1250, 3, None),
         ("desktop_2_action.png", "КОМБО АТАКА", 4800, 3, "СУПЕР УДАР x3!"),
@@ -212,21 +263,21 @@ def create_screenshots():
         ("desktop_4_victory.png", "ФИНАЛ", 12800, 3, "ПОБЕДА! РЕКОРД!"),
     ]
     for filename, title, score, lives, highlight in scenes:
-        img = render_game_scene(1280, 720, title, score, lives, highlight, is_mobile=False)
+        img = render_game_scene(SCREENSHOT_W, SCREENSHOT_H, title, score, lives, highlight)
         p = os.path.join(SCREENSHOTS_DIR, filename)
         img.save(p)
         print(f"Saved {p}")
 
-    # Mobile (720x1280)
+    # Mobile slots: ALSO 16:9 landscape (1280x720). Portrait is forbidden.
     m_scenes = [
         ("mobile_1_gameplay.png", "УРОВЕНЬ 1", 1250, 3, None),
         ("mobile_2_action.png", "БОНУС", 3400, 3, "МЕГА КОМБО!"),
     ]
     for filename, title, score, lives, highlight in m_scenes:
-        img = render_game_scene(720, 1280, title, score, lives, highlight, is_mobile=True)
+        img = render_game_scene(SCREENSHOT_W, SCREENSHOT_H, title, score, lives, highlight)
         p = os.path.join(SCREENSHOTS_DIR, filename)
         img.save(p)
-        print(f"Saved {p}")
+        print(f"Saved {p} (16:9 landscape, mobile slot)")
 
 def create_gameplay_videos(fps=30, duration_sec=5):
     ffmpeg_bin = shutil.which("ffmpeg")
@@ -242,7 +293,7 @@ def create_gameplay_videos(fps=30, duration_sec=5):
     for f in range(total_frames):
         score = 1000 + f * 50
         highlight = "КОМБО x2!" if 40 <= f <= 90 else None
-        frame = render_game_scene(1280, 720, "ГЕЙМПЛЕЙ", score, 3, highlight, is_mobile=False)
+        frame = render_game_scene(1280, 720, "ГЕЙМПЛЕЙ", score, 3, highlight)
         frame.save(os.path.join(temp_dir, f"h_frame_{f:04d}.png"))
 
     out_h = os.path.join(VIDEO_DIR, "gameplay_horizontal.mp4")
@@ -259,11 +310,11 @@ def create_gameplay_videos(fps=30, duration_sec=5):
     subprocess.run(cmd_h, check=True)
     print(f"Saved {out_h}")
 
-    print(f"Rendering {total_frames} vertical frames for video...")
+    print(f"Rendering {total_frames} vertical frames for video (9:16, video only)...")
     for f in range(total_frames):
         score = 1000 + f * 50
         highlight = "КОМБО x2!" if 40 <= f <= 90 else None
-        frame = render_game_scene(720, 1280, "ГЕЙМПЛЕЙ", score, 3, highlight, is_mobile=True)
+        frame = render_vertical_gameplay_frame(720, 1280, score, highlight)
         frame.save(os.path.join(temp_dir, f"v_frame_{f:04d}.png"))
 
     out_v = os.path.join(VIDEO_DIR, "gameplay_vertical.mp4")

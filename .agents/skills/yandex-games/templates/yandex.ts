@@ -142,6 +142,24 @@ export class YandexClient {
     try { this.sdk?.features?.GameplayAPI?.stop(); } catch (_) {}
   }
 
+  /**
+   * Binds tab-switch/minimize (focus loss) to the same pause/resume handlers
+   * as platform events. Call once from game bootstrap AFTER init():
+   *
+   *   yandex.bindLifecycleHandlers({ onPause, onResume });
+   *
+   * All sources — game_api_pause/resume, visibilitychange, blur/focus —
+   * funnel into one pause/resume pair owned by the game.
+   */
+  public bindLifecycleHandlers({ onPause, onResume }: { onPause?: () => void; onResume?: () => void } = {}): void {
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) onPause?.();
+      else onResume?.();
+    });
+    window.addEventListener('blur', () => onPause?.());
+    window.addEventListener('focus', () => onResume?.());
+  }
+
   // --- Interstitial Ads (60s Cooldown, Natural Pauses Only) ---
   public showFullscreenAdv(onClose?: (wasShown: boolean) => void): void {
     const now = Date.now();
@@ -203,6 +221,26 @@ export class YandexClient {
       this.gameplayStart();
       onClose?.(false);
     }
+  }
+
+  /**
+   * Rewarded video WITH explicit user consent.
+   * Shows a confirm dialog (question/ok/cancel strings come from the game's
+   * i18n dict so the offer is always in the player's language) and calls
+   * showRewardedVideo() only when the player accepts.
+   * NEVER call showRewardedVideo() directly from game-over/auto flows.
+   */
+  public confirmAndShowRewarded(
+    strings: { question: string; ok?: string; cancel?: string },
+    onReward: () => void,
+    onClose?: (rewarded: boolean) => void,
+  ): void {
+    const accepted = window.confirm(strings.question);
+    if (!accepted) {
+      onClose?.(false);
+      return;
+    }
+    this.showRewardedVideo(onReward, onClose);
   }
 
   // --- Cloud Saves with localStorage Fallback ---

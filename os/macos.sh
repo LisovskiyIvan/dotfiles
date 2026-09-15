@@ -14,4 +14,5 @@ CONFIG_TARGETS=(
   ".agents/skills::${HOME}/.gemini/antigravity-cli/skills"
   ".agents/skills::${HOME}/.gemini/skills"
   ".agents/skills/yandex-games::${HOME}/.agents/skills/yandex-games"
+  ".agents/skills/yandex-assets::${HOME}/.agents/skills/yandex-assets"
 )
