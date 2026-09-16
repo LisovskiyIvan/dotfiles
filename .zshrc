@@ -56,3 +56,6 @@ alias tree='eza -T --icons'
 
 # Added by Antigravity CLI installer
 export PATH="/Users/ivan/.local/bin:$PATH"
+
+# GigaCode CLI v3
+export PATH="/Users/ivan/.gigacode/bin:$PATH"

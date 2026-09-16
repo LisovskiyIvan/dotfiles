@@ -117,6 +117,17 @@ Moderation Requirement 2.14: language adapts automatically to the user's platfor
 3. Without SDK: fall back to `navigator.language`, default `ru`.
 4. Set `document.documentElement.lang` and re-render all strings; support `data-i18n` DOM rebinding.
 
+> **CRITICAL — unconditional SDK read (debug-panel probe 文, req. 2.14):**
+> The draft debug panel lights the 文 («I18N is used») indicator by the **fact of touching**
+> `sdk.environment.i18n.lang` on startup, not by the rendered strings.
+> Always read the SDK property **first and unconditionally** (before `LoadingAPI.ready()`),
+> then apply the `?lang` override to the result. Priority is unchanged: URL override wins for tests,
+> panel detection still fires.
+> `❌ ANTI-PATTERN`: `if (?lang) return lang` early without touching the SDK → zero accesses,
+> indicator stays red (real case: `preferredLang()` in minesuika did early return on `?lang=ru`;
+> minecard's unconditional `sdk?.environment?.i18n?.lang` stayed green).
+> `✅ CORRECT`: `const sdkLang = sdk.environment?.i18n?.lang; /* touch always */ ... if (urlLang) lang = urlLang; else lang = sdkLang;`
+
 Dictionary pattern in `templates/i18n.ts` (RU+EN dictionaries, `t(key, params)`, `setLanguage`/`applyI18nToDOM`).
 
 ---
@@ -188,6 +199,13 @@ Checks:
 - No external URLs in built output (except `/sdk.js`)
 - `YaGames.init`, `LoadingAPI.ready`, `GameplayAPI.start/stop`, `environment.i18n.lang`, `getPlayer`/`setData`/`getData` call sites present
 - Zip archive structure (`index.html` at root of zip)
+
+> **NOTE — known false positives in external-URL check:**
+> The validator strips `/* ... */` block comments and ignores the `w3.org` SVG/XML namespace
+> (`http://www.w3.org/2000/svg` in favicon data-URIs / inline SVG is a constant, never a fetch).
+> A three.js bundle header linking the spec is likewise not a network request
+> (real case: minesuika flagged, three.js-free minecard clean, zero real requests in both).
+> If a flagged URL is a string constant / comment — not `fetch`/`src`/`href`/`url()` — it is benign.
 
 Media/text checks (`yandex/` sizes, 16:9 screenshots, videos, char limits) belong to the `yandex-assets` skill: `validate_yandex_submission.py`.
 

@@ -85,8 +85,14 @@ export class YandexClient {
         this.sdk.on?.('game_api_pause', () => onPause?.());
         this.sdk.on?.('game_api_resume', () => onResume?.());
 
+        // CRITICAL: always touch sdk.environment.i18n.lang, even when ?lang override is present.
+        // The draft debug panel lights the 文 ("I18N is used", req. 2.14) indicator by the FACT
+        // of property access on startup. Early return on ?lang (without this read) leaves it red.
+        // Correct order: read SDK first, then let ?lang override the RESULT (priority unchanged).
         const sdkLang = this.sdk.environment?.i18n?.lang;
-        if (!urlLang && sdkLang) {
+        if (urlLang) {
+          this.lang = urlLang.toLowerCase().startsWith('ru') ? 'ru' : 'en';
+        } else if (sdkLang) {
           this.lang = sdkLang.toLowerCase().startsWith('ru') ? 'ru' : 'en';
         }
 

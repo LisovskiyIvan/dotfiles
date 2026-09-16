@@ -23,6 +23,15 @@ ROOT = os.getcwd()
 SRC_DIRS = ["src", "source", "app", "."]
 SDK_SCRIPT_RE = re.compile(r'<script[^>]+src=["\']/?sdk\.js["\']', re.IGNORECASE)
 EXTERNAL_URL_RE = re.compile(r'https?://(?!yandex\.)[^\s"\'<>]+', re.IGNORECASE)
+# Benign URL fragments that are NEVER network fetches, only string constants inside bundles:
+# - http://www.w3.org/... : SVG/XML namespace (favicon data-URI, inline <svg xmlns=...>)
+# - https://jcgt.org/... : three.js GLSL shader citation comment
+#   ("Sampling the GGX Distribution of Visible Normals", importanceSampleGGX_VNDF
+#   in three/webgl shaders, embedded as // comment inside a JS string — never fetched).
+# Real case: minesuika bundle flagged w3.org namespace + three.js spec link in /* comment */;
+# minecard (no three.js) was clean. No real network requests in either case.
+BENIGN_URL_RE = re.compile(r'w3\.org|jcgt\.org', re.IGNORECASE)
+BLOCK_COMMENT_RE = re.compile(r'/\*.*?\*/', re.DOTALL)
 
 REQUIRED_CALLSITES = [
     ("YaGames.init", re.compile(r"YaGames\s*\.\s*init\s*\(")),
@@ -85,7 +94,12 @@ def iter_source_files():
         if not os.path.isdir(base):
             continue
         for dirpath, dirnames, filenames in os.walk(base):
-            dirnames[:] = [x for x in dirnames if x not in ("node_modules", "dist", ".git", "yandex")]
+            # Skip build/vcs dirs everywhere, but skip the store-assets `yandex/`
+            # package dir ONLY at repo top level — nested `src/yandex/` holds
+            # real game SDK code (threeinamine) and must be scanned.
+            dirnames[:] = [x for x in dirnames if x not in ("node_modules", "dist", ".git")]
+            if os.path.abspath(dirpath) == os.path.abspath(ROOT) and "yandex" in dirnames:
+                dirnames.remove("yandex")
             for fn in filenames:
                 if fn.endswith(exts):
                     p = os.path.join(dirpath, fn)
@@ -118,7 +132,14 @@ def check_dist_external_urls():
         for fn in filenames:
             if fn.endswith((".html", ".js", ".css")):
                 content = read_text(os.path.join(dirpath, fn))
+                # Strip /* ... */ block comments: bundler/spec links (e.g. three.js header)
+                # are not network fetches. Line comments are kept to avoid breaking https:// in strings.
+                if fn.endswith((".js", ".css")):
+                    content = BLOCK_COMMENT_RE.sub('', content)
                 for url in set(EXTERNAL_URL_RE.findall(content)):
+                    if BENIGN_URL_RE.search(url):
+                        print(f"ℹ️ [IGNORED, benign constant] {os.path.join(dirpath, fn)}: {url}")
+                        continue
                     print(f"❌ [EXTERNAL URL] {os.path.join(dirpath, fn)}: {url}")
                     ok = False
     if ok:
