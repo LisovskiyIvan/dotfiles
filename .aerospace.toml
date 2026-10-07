@@ -78,7 +78,7 @@ cmd-shift-tab = 'move-workspace-to-monitor --wrap-around next'
 
 # fullscreen / float
 cmd-f     = 'macos-native-fullscreen'
-cmd-space = 'layout floating tiling'
+cmd-shift-space = 'layout floating tiling'
 
 # close / quit
 cmd-q = 'close'
