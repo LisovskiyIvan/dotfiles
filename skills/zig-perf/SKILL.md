@@ -6,7 +6,9 @@ description: >
   stackFallback, smp, page_allocator), ArrayList/HashMap growth and lookup,
   std.io buffering, std.debug.print locking, bounds/overflow checks,
   AoS vs SoA, alignment, padding, false sharing, SIMD/auto-vectorization
-  blockers, dynamic dispatch, atomics and Io concurrency.
+  blockers, dynamic dispatch, atomics and Io concurrency, plus sokol/sokol-zig
+  graphics hot paths (per-frame allocations, GPU resource churn, transient
+  buffer writes, draw batching, instancing, state changes).
   Based on Zig 0.16.0 stdlib internals (verified against std source).
   Use when user asks "optimize this", "why is my zig slow", "perf review",
   "hot loop", "/perf", or works on benchmarks, ReleaseFast builds, cache/SIMD.
@@ -15,7 +17,7 @@ description: >
 
 Scan Zig for performance anti-patterns. **Target: Zig 0.16.0.** std API moves fast — 0.15–0.16 reworked I/O (`std.Io`), removed `std.Thread.Pool`/`WaitGroup`, made `std.ArrayList` unmanaged, changed `main` to `main(init: std.process.Init)`. If the toolchain differs, re-check names against the installed std before applying fixes.
 
-Focus on hot paths — loops, per-item work, request handlers, jobs. Ignore one-shot init unless it allocates massively.
+Focus on hot paths — loops, per-item work, request handlers, jobs, and graphics frame callbacks (see Graphics: sokol / sokol-zig). Ignore one-shot init unless it allocates massively.
 
 **Zig reality check**: no JIT, no runtime deopt. Slow Zig is almost always: wrong build mode, allocation churn, poor memory layout/cache behavior, or hidden stdlib cost in I/O and formatting. There is no GC, but also no rescue — `Debug` is 5–100x slower than `ReleaseFast`, and an allocation call on every loop iteration is a real vtable call plus allocator bookkeeping.
 
@@ -121,6 +123,8 @@ Focus on hot paths — loops, per-item work, request handlers, jobs. Ignore one-
 | Struct-of-arrays of a record type | `std.MultiArrayList(T)` — `items(.field)` gives `[]Field` | `[]T` when only a few fields are hot |
 | Scratch allocations in a hot loop | `std.heap.stackFallback(N, gpa).get()` on stack, `FixedBufferAllocator` | heap alloc/free per item |
 | Batched lifetime (request, frame, job) | `ArenaAllocator`, `reset(.retain_capacity)` after each batch | individual `free` bookkeeping |
+| Per-frame scratch (draw lists, instance data) | frame arena reset per frame; pre-reserved `ArrayList`/SoA | allocator calls or unbounded growth in the frame callback |
+| Same mesh, many objects | instancing (`.PER_INSTANCE` attrs, `sg.draw(base, num, instances)`) | one draw call per object |
 | Comptime-known string keys | `std.StaticStringMap(V)` | `StringHashMap` for a fixed command/flag list |
 | Enum keys | `std.EnumMap(K, V)` (direct array index, no hashing) | `StringHashMap` keyed by `@tagName` |
 | Integer keys | `std.AutoHashMap(K, V)`; `getPtr`/`getOrPut` to avoid double lookup | repeated `get`+`put`; linear `std.mem.indexOf` |
@@ -232,6 +236,91 @@ Every `allocator.alloc` is an indirect call through the `Allocator` vtable plus 
 - Work stealing / chunking: give each thread thousands of elements per chunk; per-item synchronization costs more than the work.
 - With `Io.Threaded`, `io.concurrent` schedules onto a thread pool — do not spawn a thread per task yourself.
 
+## Graphics: sokol / sokol-zig
+
+The `frame` callback is a hot path like any loop, plus GPU rules on top. Verified against sokol-zig for Zig 0.16 (commit `e12ece1c`).
+
+A healthy frame: no allocations outside a frame arena, no logging, no GPU object creation, per-frame data written **once** per transient buffer **before** binding, draws grouped by state, `sg.commit()` exactly once.
+
+### 🔴 Frame-callback violations (hitch per frame)
+
+| Pattern | Detection | Fix |
+|---|---|---|
+| GPU object creation in frame | `sg.makeBuffer/makeImage/makeShader/makePipeline/makeView` reachable from `frame` | Make in `init`, destroy in `cleanup`; one pipeline per blend/depth/MSAA combo |
+| Writing a buffer after binding it | `sg.writeBufferTransient` interleaved with `applyBindings` | Transient writes must finish before the buffer is bound: build all frame data first, then draw |
+| Many writes to one buffer per frame | several `sg.writeBufferTransient`/legacy `updateBuffer` calls on one buffer | Pack all per-frame data; one write per buffer per frame; sub-ranges via `.dst.offset` (4-byte aligned) |
+| Allocations in frame | `allocator.alloc`, `allocPrint`, `ArrayList.append` without reserve | Frame arena + `reset(.retain_capacity)`; reserve in `init`; scratch structs |
+| Logging per frame | `std.debug.print` / `std.log` in `frame` | Dev flag only — stderr mutex + syscalls eat frame time |
+| GPU readback in frame | copying image data to a staging buffer and reading it each frame | Readbacks stall the pipeline; screenshots/picking on demand only |
+| Per-frame pipeline churn | shaders/pipelines rebuilt for state variants | Cache pipelines at init; hot-reload only in dev |
+| Unbounded frame growth | arrays whose capacity only ever grows | Clamp and reuse; watch capacity, not just length |
+
+### 🟡 Draw organization & bandwidth
+
+| Pattern | Detection | Fix |
+|---|---|---|
+| Draw call per object/sprite | `sg.draw` inside per-entity loops | Instancing (`.PER_INSTANCE` attrs) or merged static geometry; a handful of draws per frame |
+| State ping-pong | alternating `applyPipeline`/`applyBindings` between two sets | Sort draws by pipeline → bindings; sokol_gfx tracks current state, but every real switch costs backend calls. Audit with `sg.queryStats()` (`num_draw`, `num_apply_pipeline`) |
+| Texture switch per sprite | many different views per frame | Texture atlas: one view, UV offsets in vertex data |
+| Whole-buffer upload for a small change | full-size write for a small update | Partial write with `.dst.offset` |
+| Per-frame math on AoS | transform loops over `[]struct` | SoA + `@Vector`/`@mulAdd`; precompute static matrices once (see SoA section) |
+| Overdraw | stacked transparent quads, big full-screen blends | Opaque front-to-back for early-Z; MSAA 4x unless proven otherwise |
+| No culling | every entity submitted every frame | Frustum/AABB per batch; SoA positions are SIMD-friendly |
+| Rebuilt large bindings per draw | big `sg.Bindings` copies every draw | One bindings struct, mutate offsets |
+
+### 🕐 sokol API notes
+
+| API | Use | Perf notes |
+|---|---|---|
+| `.usage.write_transient` + `sg.writeBufferTransient` | Per-frame dynamic data consumed the same frame | Write before bind; pack into one write; transient staging sizing (Vulkan: `.vulkan.transient_staging_buffer_size`) |
+| `.usage.write_unsealed` + `writeBufferUnsealed`/`sealBuffer` | Immutable resource assembled from several writes at load | Avoids repeated updates after init |
+| `bind.vertex_buffer_offsets`, `bind.index_buffer_offset` | Many geometries/draws from one buffer | No re-upload, no buffer rebinding |
+| `sg.draw(base, num, instances)`, `sg.drawEx(...)` | Instancing; base vertex/instance | Cheapest way to scale object count |
+| `sg.queryStats()` | Per-frame counters: draws, `apply_*` calls, write bytes | The regression meter for batching |
+| `sapp.frameDuration()` / `frameDurationUnfiltered()` | dt vs jank profiling | Smoothed value blends toward refresh rate; use unfiltered for measurements |
+| `stm.setup()` + `stm.laptime(&last)` | Explicit frame ms (`sokol.time`) | Keep measurement out of shipping hot path |
+| `.disable_vsync`, `.high_dpi`, `sapp.dpiScale()` | Pacing and display scaling | vsync off only for benchmarks; high-DPI costs fill rate |
+| `sg.queryBackend()` | Shader desc; backend branches | macOS default Metal; `-Dgl=true`/`-Dvulkan=true` are build options — bench what you ship |
+| Staging + `sg.copyBufferToImage` | Runtime atlas/region updates | Batch copies; not as bad as readbacks, still not free |
+
+### Frame-loop skeleton
+
+```zig
+const sokol = @import("sokol");
+const sg = sokol.gfx;
+const sapp = sokol.app;
+const sglue = sokol.glue;
+
+const state = struct {
+    var frame_arena: std.heap.ArenaAllocator = undefined; // init once, reset per frame
+    var stream: sg.Buffer = .{};      // .usage = .{ .write_transient = true }, worst-frame sized
+    var instances: std.ArrayList(Instance) = .empty; // reserved in init
+    var pass_action: sg.PassAction = .{};
+    var pip: sg.Pipeline = .{};       // shader/pipeline made in init
+    var bind: sg.Bindings = .{};
+};
+
+export fn frame() void {
+    defer _ = state.frame_arena.reset(.retain_capacity);
+    const dt: f32 = @floatCast(sapp.frameDuration());
+    _ = dt;
+
+    const n: u32 = @intCast(state.instances.items.len);
+    sg.writeBufferTransient(.{ // once per buffer per frame, before any bind
+        .dst = .{ .buffer = state.stream },
+        .src = .{ .data = sg.asRange(state.instances.items) },
+    });
+
+    sg.beginPass(.{ .action = state.pass_action, .swapchain = sglue.swapchain() });
+    sg.applyPipeline(state.pip); // draw order = state-change order
+    state.bind.vertex_buffers[0] = state.stream;
+    sg.applyBindings(state.bind);
+    sg.draw(0, 6, n);
+    sg.endPass();
+    sg.commit(); // exactly once
+}
+```
+
 ## What NOT to do
 
 - Don't micro-optimize cold code (init, once-per-process setup). Hot paths only: loops, handlers, per-frame/per-item work.
@@ -246,6 +335,11 @@ Every `allocator.alloc` is an indirect call through the `Allocator` vtable plus 
 - Don't `inline for`/`inline fn` everything — code bloat and compile-time blowup; only small, fixed, measured-hot cases.
 - Don't hash strings at runtime for fixed key sets — `StaticStringMap` at comptime.
 - Don't traverse linked structures per element in hot loops; contiguous memory first.
+- Don't create or destroy GPU resources in the frame callback; cache pipelines per state combo.
+- Don't write a transient buffer after binding it; one packed write per buffer per frame.
+- Don't issue a draw call per object/sprite; instance, batch by state, atlas your textures.
+- Don't read back GPU data in the frame loop; readbacks stall the pipeline.
+- Don't benchmark frame loops in Debug with validation on, and don't read vsync-capped FPS as headroom — use `sapp.frameDurationUnfiltered()` / `stm`.
 - Don't forget `try writer.flush()` — buffering trades a missing write for a mysterious one.
 - Don't trust one benchmark run on a laptop on battery; profile before and after, medians not bests.
 
@@ -275,6 +369,7 @@ pub fn main(init: std.process.Init) !void {
 - **Duration**: measure ≥ 100ms per case; read timestamps per iteration, report median/min plus allocation counts if relevant.
 - **Tools**: `hyperfine` for CLI end-to-end (`hyperfine --warmup 3 './app'`), `perf stat`/`perf record` (Linux), Instruments/`samply` (macOS), `-fno-omit-frame-pointer` for stack samples, `-femit-asm` to verify codegen claims.
 - **Pitfalls**: thermal/frequency scaling, turbo, background load; first iteration includes faults; `std.debug.print` inside the loop destroys measurements; benchmark threads count as part of the design (measure 1 vs N cores).
+- **Frame loops (sokol)**: measure ≥600 frames; report median and p99 (1% low), not the average. Time with `sapp.frameDurationUnfiltered()` or `stm.laptime()`. Audit batching with `sg.queryStats()`. GPU tools: `MTL_HUD_ENABLED=1` (Metal HUD on macOS), Xcode Metal frame capture, RenderDoc for GL/Vulkan/D3D. Disable vsync only to measure headroom; ship with vsync.
 
 ## Review Output Format
 
@@ -286,13 +381,14 @@ path:line: 🟡 PERF: <pattern>. <fix>.
 path:line: 🔵 MEM: <layout/alignment/cache>. <fix>.
 path:line: 🟣 BUILD: <mode/config issue>. <fix>.
 path:line: 🕐 STD: <0.16 stdlib pattern>. <fix>.
+path:line: 🎮 GPU: <sokol frame-loop / draw issue>. <fix>.
 path:line: 🟢 STYLE: <correctness-adjacent issue>. <fix>.
 ```
 
 Sorted by severity, then file, then line. At end:
 
 ```
-totals: N🔴 N🟡 N🔵 N🟣 N🕐 N🟢
+totals: N🔴 N🟡 N🔵 N🟣 N🕐 N🎮 N🟢
 ```
 
 ## Auto-clarity
