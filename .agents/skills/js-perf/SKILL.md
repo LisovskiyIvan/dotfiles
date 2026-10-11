@@ -3,8 +3,9 @@ name: js-perf
 description: >
   Scans JavaScript/TypeScript for performance anti-patterns and code-quality issues
   in hot paths. Covers loops, data structures, V8 deoptimization, GC pressure,
-  DOM/layout thrashing, async patterns, RegExp, and Node.js specifics.
-  Based on real benchmark data (Bun + Node/V8).
+  DOM/layout thrashing, async patterns, RegExp, Proxy/Intl/URL hot-path costs,
+  worker transfer, scheduler APIs, and Node.js + Bun specifics.
+  Based on real benchmark data (Bun + Node/V8) and 2025-2026 engine benchmarks.
   Use when user asks "optimize this", "make this faster", "perf review", "hot loop",
   "why is this slow", "/perf", or when reviewing game-render loops, data processing,
   or any code iterating >10K elements.
@@ -30,6 +31,11 @@ Scan JS/TS for performance anti-patterns. Focus on hot paths — loops, frequent
 | Sequential `await` in loop for independent work | `for (const u of urls) { await fetch(u) }` | `await Promise.all(urls.map(fetch))` — N× latency vs 1× latency |
 | Missing debounce/throttle on frequent events | Handler on `scroll`, `resize`, `input`, `mousemove` with no rate limit | `debounce(fn, 150)` for search/input; `throttle(fn, 16)` for scroll/resize |
 | Closure/arrow created per iteration | `arr.map(x => { const cb = (y) => ...; return cb(x) })` — new function object each iteration | Hoist the closure outside the loop. Each allocation adds GC pressure in hot paths |
+| `new Proxy()` wrapping hot object | `new Proxy(` whose result is read in loop/render/handler — V8: get ~13x, set ~27x, ownKeys ~89x slower; real-world interop cases hit 60x per access | Don't wrap modules/stores in Proxy on hot path. Share one handler, cache `.bind()` results, copy properties once instead of Proxy (ESM/CJS interop) |
+| `new Intl.*` / `.toLocaleString()` in render/loop | `new Intl.NumberFormat|DateTimeFormat|Collator|RelativeTimeFormat|ListFormat` inside component/`map` row; `.toLocale(String|DateString)(` in `map` | Constructor does locale negotiation + CLDR lookup (28x-700x penalty), `.format()` is cheap. One instance per locale+options at module scope / `useMemo` / small LRU |
+| `new URL()` / `new URLSearchParams()` in hot path | `new URL(` in path resolver, router, loader, fetch wrapper | WHATWG parse is strict and expensive; with base string — worse. Cache parsed result. For internal paths: manual `split()`/`lastIndexOf` (Vite: −150ms startup after removing one `new URL`) |
+| `postMessage(data)` without transfer list | `postMessage(bigBuffer)` / `postMessage(float32Array)` with no second argument | Structured clone = sync serialize on sender + deserialize on receiver: 3-8ms/MB, janky frames past ~100KB-1MB. `postMessage(buf, [buf])` = <0.1ms any size, break-even ~200KB. Shared state → SharedArrayBuffer + Atomics (needs COOP/COEP) |
+| `await` in loop used as "yield" on CPU batch | `for (...) { work(); await Promise.resolve() }` over 10K+ items, no real I/O | `await Promise.resolve()` is a microtask — browser never gets to paint, INP fails. Batch work + `await scheduler.yield()` every ~16-50ms (fallback `setTimeout(0)`). For 100K+: chunked `Promise.all` with concurrency limit |
 
 ### 🟡 SIGNIFICANT (1.5x–4x slowdown, fix in hot paths)
 
@@ -53,6 +59,20 @@ Scan JS/TS for performance anti-patterns. Focus on hot paths — loops, frequent
 | `regex.test()` for substring existence check | `re.test(str)` when `str.includes(sub)` would work | `str.includes(sub)` — 4x-13x faster. Regex compile + match overhead vs direct string scan. Use regex only when you need pattern matching, not literal substrings |
 | Optional chaining `?.` in tight loop | `obj?.prop?.nested` inside loop body | 🔵 V8-only (5x penalty). Bun: no penalty. Hoist null check for V8: `const v = obj?.prop; if (!v) return; for (...) v.nested` |
 | Default parameters in hot function | `function hot(x = expensiveDefault())` — `expensiveDefault` runs every call | Hoist default: `const DEF = expensiveDefault(); function hot(x = DEF)`. V8 also generates extra branching for `undefined` check |
+| `setTimeout(fn, 0)` for slicing long tasks (browser) | Chunking via `setTimeout` — end of task queue + 4ms clamp after 5 nested levels | `await scheduler.yield()` (Chrome 129+, FF 142+; Safari needs fallback) — front of priority queue. `MessageChannel` has no clamp (~50-200µs) — that's what React scheduler uses. Diagnose INP via LoAF API, not deprecated Long Tasks; `isInputPending()` no longer recommended |
+| `localStorage` access in hot path (browser) | `localStorage.getItem|setItem` in render/scroll/startup — sync main-thread block + JSON serialize per touch; unavailable in workers | OK for <100KB (theme, flags). Larger → IndexedDB (async) or OPFS in worker. Caveat: IndexedDB also serializes on main thread — hundreds of requests cause long tasks, persist incrementally |
+| Heavy cookies on every request (browser) | Multi-KB tokens in cookies, resent with every request/subresource — network tax invisible in local benchmarks | Small session ID in `HttpOnly; Secure; SameSite` cookie. Bulk data → IndexedDB/OPFS |
+| Animating non-compositor properties (browser) | `transition: all`, animating `width/height/top/left`, `backdrop-filter: blur()` on large area, huge `box-shadow`/`border-radius`, `:has()` high in DOM tree | Animate only `transform`/`opacity`/`filter` (GPU, no layout/paint). Pair `content-visibility: auto` with `contain: strict` for widgets |
+| Canvas misuse (browser) | `getImageData(` in loop, `getContext()` without `{alpha: false, desynchronized: true}`, wasted `save/restore`, heavy canvas on main thread | Cache text measurements, batch draw calls, move heavy canvas to `OffscreenCanvas` in worker. `<img decoding="async" fetchpriority="...">` |
+| `new Error()` in hot path | `throw` / `new Error` as control flow in loop — stack trace captured at creation | Errors only on exceptional path. Sentinel returns / result objects for expected failures |
+| `.bind()` per call | `fn.bind(x)` inside loop/render/handler — allocates a new function each time | Bind once at init, store the bound ref. Class-field arrow also binds once |
+| Getters in hot loop | `Object.defineProperty` / `get x()` read per iteration — 2-4x vs plain field, megamorphic getter worse | Read the getter once outside the loop into a local, or use plain fields |
+| `BigInt` in hot math | `BigInt(` / `123n` where values fit in double range | `Number` — BigInt is ~10x slower. BigInt only for >2^53 precision requirements |
+| `crypto.getRandomValues` per item | Called inside loop — syscall each time | Batch: request one large buffer, slice as needed |
+| `new TextEncoder()` per call | Instantiated per serialize call | Module-scope singleton: `const enc = new TextEncoder()` |
+| `.localeCompare` in sort comparator | `arr.sort((a,b) => a.name.localeCompare(b.name))` | One `Intl.Collator` instance (see Intl row): `collator.compare` is far faster |
+| `JSON.stringify(obj, null, 2)` / replacer in hot path | Pretty-print or replacer fn in per-frame/per-request code | Bare `JSON.stringify(obj)` — pretty-print and replacer are multiple times slower. Reserve for cold path. Cache `Date.now()` once per batch in tight loops (`performance.now()` in browser) |
+| `.toSorted/.toReversed/.with/.toSpliced` in hot path | New immutable array methods in loop — full copy on every call, less obvious than spread | In-place `sort`/`reverse` on preallocated array, or manual `for` |
 
 ### 🔵 V8 DEOPT TRIGGERS (hard to measure, systemic slowdown)
 
@@ -148,6 +168,17 @@ Scan JS/TS for performance anti-patterns. Focus on hot paths — loops, frequent
 | CPU-bound work on main thread | Heavy computation in request handler or event callback | `worker_threads` or `cluster.fork()` for parallel CPU; `setImmediate` / `process.nextTick` to yield for iterative work |
 | `Buffer.alloc` vs `Buffer.allocUnsafe` | `Buffer.alloc(N)` zero-fills (slow, safe) | `Buffer.allocUnsafe(N)` when you immediately overwrite the buffer — 2-4x faster, no zero-fill |
 | `process.env` access in hot path | Reading `process.env.X` repeatedly in loop or per-request | Cache to local variable: `const X = process.env.X;` — env lookup is a hash table access |
+| `AsyncLocalStorage` per-tick / OTel auto-instrumentation | `new AsyncLocalStorage` run per event/tick instead of request scope; `diagnostics_channel.publish` costs even with no subscribers; OTel auto-instrumentation measured up to −80% throughput (Node 22/24) | ALS for request scope only, never per tick. OTel — selective instrumentation in latency-sensitive services. Node 24 has faster ALS — upgrading is justified by this alone |
+| Recursive `process.nextTick` for queue draining | `process.nextTick` recursion — drains before I/O phase, starves event loop | `setImmediate` for iterative CPU slicing. `nextTick` only for same-tick continuation |
+| `require()` / `import()` / `path.resolve` in handler | Sync resolution + FS lock per request | Resolve and read everything at startup; handler touches cache only |
+
+### 🟣 BUN SPECIFIC
+
+| Pattern | Detection | Fix |
+|---|---|---|
+| Manual file I/O instead of `Bun.file` | `fs.readFileSync` / manual read+write copy in Bun server | `Bun.file()` is lazy — no I/O until read. `Bun.write(dest, src)` uses `copy_file_range`/`sendfile`/`clonefile` — order of magnitude faster than manual copy. `new Response(Bun.file(p))` streams from disk; `new Response(await Bun.file(p).bytes())` buffers in RAM (pair with ETag) |
+| sqlite queries in loop without prepare | `db.query/db.run` inside loop, no `db.transaction` | Prepare once (`db.query()` returns prepared statement), bulk work inside `db.transaction(() => ...)` — orders of magnitude on bulk insert |
+| Wrong GC settings / measurement in Bun | `--smol` in latency-sensitive prod (more GC, smaller heap, slower); `process.memoryUsage()` read without forcing GC | Measure only after `Bun.gc(true)` (sync/blocking — never call in prod hot path), otherwise memory numbers lie. Profile with `--heap-prof-md` / `--cpu-prof-md` |
 
 ## What NOT to do
 
@@ -162,6 +193,11 @@ Scan JS/TS for performance anti-patterns. Focus on hot paths — loops, frequent
 - Don't assume Bun/V8 parity. Always measure on your target runtime. Bun inlines more aggressively; code fast in Bun may crawl in Chrome.
 - Don't use `eval` or `new Function` even in "cold" code if the containing function might become hot later — deopts the entire enclosing scope.
 - Don't polyfill native methods with JS implementations — native is always faster. Feature-detect and use native, fall back only for missing APIs.
+- Don't wrap modules/stores in Proxy "for laziness" on hot paths — every access pays interception tax (13x-89x). Explicit function or copied object costs nothing.
+- Don't create `Intl.*` formatters per render/row — cache by locale+options. This is the most common miss in tables/lists.
+- Don't `await Promise.resolve()` to "let the browser breathe" — microtasks don't yield to paint. Use `scheduler.yield()` with a `setTimeout(0)` fallback.
+- Don't benchmark Bun memory without `Bun.gc(true)` first — `process.memoryUsage()` lies otherwise.
+- Don't fixate on engine micro-benchmarks for browser work — postMessage serialization, localStorage sync reads, and non-compositor animations dominate real-world jank before any loop does.
 
 ## Benchmarking Methodology
 
@@ -197,6 +233,7 @@ When reviewing code, flag findings as:
 path:line: 🔴 CRITICAL: <pattern>. <fix in ≤10 words>.
 path:line: 🟡 PERF: <pattern>. <fix>.
 path:line: 🔵 V8: <deopt pattern>. <fix>.
+path:line: 🟣 BUN: <bun-specific pattern>. <fix>.
 path:line: 🕐 REGEXP: <regex issue>. <fix>.
 path:line: 🟢 STYLE: <quality issue>. <fix>.
 ```
@@ -204,7 +241,7 @@ path:line: 🟢 STYLE: <quality issue>. <fix>.
 Sorted by severity, then file, then line. At end:
 
 ```
-totals: N🔴 N🟡 N🔵 N🕐 N🟢
+totals: N🔴 N🟡 N🔵 N🟣 N🕐 N🟢
 ```
 
 ## Auto-clarity
