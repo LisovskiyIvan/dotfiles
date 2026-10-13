@@ -98,6 +98,7 @@ return {
       ensure_installed = {
         "stylua",
         "selene",
+        "clang_format",
       },
     },
   },
@@ -224,7 +225,7 @@ return {
     opts = {
       ensure_installed = {
         "vim", "lua", "vimdoc",
-        "html", "css", "c", "go", "rust", "zig",
+        "html", "css", "c", "cpp", "go", "rust", "zig",
         "javascript", "typescript", "tsx", "jsx",
         "python",
         "gdscript", "godot_resource", "godot_scene",

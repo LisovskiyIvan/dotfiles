@@ -30,25 +30,25 @@ Store-facing assets (texts, icon, cover, screenshots, videos, `yandex/` package)
 
 All projects must use **Bun** and latest stable versions:
 
-| Category | Recommended Stack | Key Packages |
-| :--- | :--- | :--- |
-| **Package Manager** | Bun | `bun install`, `bun run dev`, `bun run build`, `bun run pack` |
-| **Bundler** | Vite (latest v8+) | `vite`, `typescript` |
-| **2D Games** | Canvas 2D / DOM / Pixi | `@dimforge/rapier2d-compat` (for 2D physics) |
-| **3D Games** | Three.js + Rapier | `three`, `@types/three`, `@dimforge/rapier3d-compat` (or 2D compat for 2.5D) |
-| **Audio** | Procedural Web Audio API | Zero external audio asset size; 100% offline (§6) |
-| **Fonts** | Local WOFF2 / TTF | Bundled in `public/fonts/` with `@font-face` (Cyrillic + Latin) |
+| Category            | Recommended Stack        | Key Packages                                                                 |
+| :------------------ | :----------------------- | :--------------------------------------------------------------------------- |
+| **Package Manager** | Bun                      | `bun install`, `bun run dev`, `bun run build`, `bun run pack`                |
+| **Bundler**         | Vite (latest v8+)        | `vite`, `typescript`                                                         |
+| **2D Games**        | Canvas 2D / DOM / Pixi   | `@dimforge/rapier2d-compat` (for 2D physics)                                 |
+| **3D Games**        | Three.js + Rapier        | `three`, `@types/three`, `@dimforge/rapier3d-compat` (or 2D compat for 2.5D) |
+| **Audio**           | Procedural Web Audio API | Zero external audio asset size; 100% offline (§6)                            |
+| **Fonts**           | Local WOFF2 / TTF        | Bundled in `public/fonts/` with `@font-face` (Cyrillic + Latin)              |
 
 ### Vite Configuration (`vite.config.ts`)
 
 ```ts
-import { defineConfig } from 'vite';
+import { defineConfig } from "vite";
 
 // CRITICAL: base './' is required. Absolute /assets/ paths 404 in Yandex S3 iframes.
 export default defineConfig({
-  base: './',
+  base: "./",
   build: {
-    target: 'es2022',
+    target: "es2022",
     assetsInlineLimit: 0,
   },
 });
@@ -69,6 +69,7 @@ export default defineConfig({
   }
 }
 ```
+
 > **IMPORTANT**: In the generated zip archive, `index.html` must be in the archive's root directory, NOT inside a nested `dist/` folder.
 
 ---
@@ -82,17 +83,20 @@ Requirement 1.1 of moderation: `/sdk.js` must be declared in `<head>` before the
 ```html
 <!doctype html>
 <html lang="ru">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-  <title>Game Title</title>
-  <!-- Yandex Games SDK v2: must be in <head> before game bundle -->
-  <script src="/sdk.js"></script>
-</head>
-<body>
-  <div id="app"></div>
-  <script type="module" src="/src/main.ts"></script>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, user-scalable=no"
+    />
+    <title>Game Title</title>
+    <!-- Yandex Games SDK v2: must be in <head> before game bundle -->
+    <script src="/sdk.js"></script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
 </html>
 ```
 
@@ -138,9 +142,13 @@ All persistent state (level progress, unlocked content, user settings, best scor
 
 ```ts
 // Load: cloud first (platform + authorized), localStorage fallback/merge
-const progress = await yandex.loadData('progress_v1', { level: 1, unlocked: [1], sound: true });
+const progress = await yandex.loadData("progress_v1", {
+  level: 1,
+  unlocked: [1],
+  sound: true,
+});
 // Save: localStorage immediately, cloud flush when on platform
-await yandex.saveData('progress_v1', progress);
+await yandex.saveData("progress_v1", progress);
 ```
 
 Rules:

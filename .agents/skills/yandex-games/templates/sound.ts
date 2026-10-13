@@ -8,12 +8,13 @@ class SoundManager {
 
   private initContext(): void {
     if (!this.ctx) {
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioCtx =
+        window.AudioContext || (window as any).webkitAudioContext;
       if (AudioCtx) {
         this.ctx = new AudioCtx();
       }
     }
-    if (this.ctx && this.ctx.state === 'suspended') {
+    if (this.ctx && this.ctx.state === "suspended") {
       this.ctx.resume().catch(() => {});
     }
   }
@@ -33,7 +34,7 @@ class SoundManager {
    * Safe to call when context was never created (no-op).
    */
   public pauseAll(): void {
-    if (this.ctx && this.ctx.state === 'running') {
+    if (this.ctx && this.ctx.state === "running") {
       this.ctx.suspend().catch(() => {});
     }
   }
@@ -46,7 +47,7 @@ class SoundManager {
    */
   public resumeAll(): void {
     if (this.isMuted) return;
-    if (this.ctx && this.ctx.state === 'suspended') {
+    if (this.ctx && this.ctx.state === "suspended") {
       this.ctx.resume().catch(() => {});
     }
   }
@@ -62,7 +63,7 @@ class SoundManager {
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
 
-    osc.type = 'sine';
+    osc.type = "sine";
     const now = this.ctx.currentTime;
     osc.frequency.setValueAtTime(160, now);
     osc.frequency.exponentialRampToValueAtTime(420, now + 0.12);
@@ -86,7 +87,7 @@ class SoundManager {
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
 
-    osc.type = 'triangle';
+    osc.type = "triangle";
     const now = this.ctx.currentTime;
     osc.frequency.setValueAtTime(880, now); // A5
     osc.frequency.setValueAtTime(1318.5, now + 0.08); // E6
@@ -118,7 +119,7 @@ class SoundManager {
     noise.buffer = buffer;
 
     const filter = this.ctx.createBiquadFilter();
-    filter.type = 'lowpass';
+    filter.type = "lowpass";
     const now = this.ctx.currentTime;
     filter.frequency.setValueAtTime(800, now);
     filter.frequency.exponentialRampToValueAtTime(80, now + 0.3);
@@ -144,7 +145,7 @@ class SoundManager {
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
 
-    osc.type = 'square';
+    osc.type = "square";
     const now = this.ctx.currentTime;
     osc.frequency.setValueAtTime(600, now);
     gain.gain.setValueAtTime(0.15, now);
@@ -170,7 +171,7 @@ class SoundManager {
       const gain = this.ctx.createGain();
       const startTime = this.ctx.currentTime + idx * 0.1;
 
-      osc.type = 'sine';
+      osc.type = "sine";
       osc.frequency.setValueAtTime(freq, startTime);
 
       gain.gain.setValueAtTime(0.2, startTime);
@@ -193,7 +194,7 @@ class SoundManager {
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
 
-    osc.type = 'sawtooth';
+    osc.type = "sawtooth";
     const now = this.ctx.currentTime;
     osc.frequency.setValueAtTime(320, now);
     osc.frequency.linearRampToValueAtTime(80, now + 0.4);

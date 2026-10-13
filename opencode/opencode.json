@@ -13,18 +13,39 @@
     },
     "fff": {
       "type": "local",
-      "command": [
-        "fff-mcp"
-      ],
+      "command": ["fff-mcp"],
       "enabled": true
     }
   },
-  "instructions": [
-    "rules/*.md"
-  ],
-"provider": {
-}, 
-"agent": {
+  "formatter": {
+    "prettier": { "disabled": true },
+    "biome": { "disabled": true },
+    "oxfmt": { "disabled": true },
+    "bun-fmt": {
+      "command": ["bun", "fmt", "$FILE"],
+      "extensions": [
+        ".js",
+        ".jsx",
+        ".mjs",
+        ".cjs",
+        ".ts",
+        ".tsx",
+        ".mts",
+        ".cts",
+        ".json",
+        ".jsonc",
+        ".css",
+        ".html",
+        ".htm",
+        ".md",
+        ".mdx",
+        ".yaml",
+        ".yml"
+      ]
+    }
+  },
+  "provider": {},
+  "agent": {
     "build": { "disable": false },
     "plan": { "disable": true },
     "general": { "model": "opencode-go/muse-spark-1.3-contributor" },

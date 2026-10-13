@@ -1,12 +1,12 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from "vite";
 
 // CRITICAL FOR YANDEX GAMES:
 // base: './' is mandatory because Yandex Games serves games from nested bucket subpaths.
 // Absolute URLs (/assets/...) result in 404 errors and fail moderation.
 export default defineConfig({
-  base: './',
+  base: "./",
   build: {
-    target: 'es2022',
+    target: "es2022",
     assetsInlineLimit: 0,
   },
   server: {

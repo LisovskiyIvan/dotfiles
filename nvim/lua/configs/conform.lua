@@ -8,6 +8,8 @@ local options = {
     typescript = { "oxfmt" },
     typescriptreact = { "oxfmt" },
     zig = { "zigfmt" },
+    c = { "clang_format" },
+    cpp = { "clang_format" },
     -- css = { "prettier" },
     -- html = { "prettier" },
   },

@@ -88,6 +88,15 @@ vim.lsp.config("clangd", {
   on_attach = nvlsp.on_attach,
   on_init = nvlsp.on_init,
   capabilities = capabilities,
+  cmd = {
+    "clangd",
+    "--background-index",
+    "--clang-tidy",
+    "--header-insertion=iwyu",
+    "--completion-style=detailed",
+    "--function-arg-placeholders",
+    "--fallback-flags=-std=c++20", -- standalone files without compile_commands.json
+  },
 })
 
 vim.lsp.config("zls", {

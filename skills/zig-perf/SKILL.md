@@ -25,116 +25,116 @@ Focus on hot paths — loops, per-item work, request handlers, jobs, and graphic
 
 ### 🔴 CRITICAL (10x–100x, syscall/lock per operation)
 
-| Pattern | Detection | Fix |
-|---|---|---|
-| `Debug` build in prod or benchmarks | `zig build` without `-Doptimize`; `zig run`; `zig test` as bench | Ship and bench `-Doptimize=ReleaseFast` (`ReleaseSafe` if panics must stay) |
-| `page_allocator` on a hot path | `std.heap.page_allocator` reachable from loop/handler | `ArenaAllocator` / `FixedBufferAllocator` / `std.heap.stackFallback` / `smp_allocator`. `page_allocator` does a syscall per allocation |
-| Debug allocator as prod allocator | `std.heap.DebugAllocator` (or `std.testing.allocator`) in release path | `DebugAllocator` only for debug + leak checks. Prod: `std.heap.smp_allocator` or `c_allocator` |
-| Allocation per item | `allocator.alloc/dupe/create` inside `for`/`while` body | Hoist out; arena + `reset(.retain_capacity)` per batch; scratch buffer |
-| `std.debug.print` in hot path | `std.debug.print` inside loop/handler | Remove, sample, or use buffered writer. It takes a global stderr mutex per call (0.16: `lockStderr`/`unlockStderr`) |
-| Unbuffered or per-item I/O | `writeStreamingAll`/`writePositionalAll` per item; `.flush()` per item | One `std.Io.File.Writer` with an 8–64KiB buffer, flush once |
-| O(n²) membership scans | `std.mem.indexOf`/`std.mem.eql` inside a loop over big slices | `std.AutoHashMap(K, void)`, `StaticStringMap`, bitset, or sort + `binarySearch` |
-| Global mutex per item | `.lock(` inside per-item work | `std.atomic.Value` for counters/flags; shard state per thread; batch under one lock |
-| Per-item parse | `std.json.parseFromSlice` per element/request | Parse once per batch; `parseFromSliceLeaky` + arena; `std.json.Scanner` streaming |
-| Per-item string formatting | `std.fmt.allocPrint` in loop | `std.fmt.bufPrint` into a stack buffer; `Io.Writer.Allocating`; preallocated `ArrayList(u8)` |
-| Multi-KB struct passed by value per call | param `T` with `@sizeOf(T)` > ~64 in hot fn | `*const T`; `noalias` slices for outputs |
-| Thread spawn per item | `std.Thread.spawn` in loop | `Io.Group` / `io.concurrent`; persistent workers + queue; partition a slice across `getCpuCount()` threads |
-| Runtime hashing of constant keys | string compare/hash in hot loop for fixed key set | `StaticStringMap` (comptime hashing), `EnumMap` |
+| Pattern                                  | Detection                                                              | Fix                                                                                                                                    |
+| ---------------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `Debug` build in prod or benchmarks      | `zig build` without `-Doptimize`; `zig run`; `zig test` as bench       | Ship and bench `-Doptimize=ReleaseFast` (`ReleaseSafe` if panics must stay)                                                            |
+| `page_allocator` on a hot path           | `std.heap.page_allocator` reachable from loop/handler                  | `ArenaAllocator` / `FixedBufferAllocator` / `std.heap.stackFallback` / `smp_allocator`. `page_allocator` does a syscall per allocation |
+| Debug allocator as prod allocator        | `std.heap.DebugAllocator` (or `std.testing.allocator`) in release path | `DebugAllocator` only for debug + leak checks. Prod: `std.heap.smp_allocator` or `c_allocator`                                         |
+| Allocation per item                      | `allocator.alloc/dupe/create` inside `for`/`while` body                | Hoist out; arena + `reset(.retain_capacity)` per batch; scratch buffer                                                                 |
+| `std.debug.print` in hot path            | `std.debug.print` inside loop/handler                                  | Remove, sample, or use buffered writer. It takes a global stderr mutex per call (0.16: `lockStderr`/`unlockStderr`)                    |
+| Unbuffered or per-item I/O               | `writeStreamingAll`/`writePositionalAll` per item; `.flush()` per item | One `std.Io.File.Writer` with an 8–64KiB buffer, flush once                                                                            |
+| O(n²) membership scans                   | `std.mem.indexOf`/`std.mem.eql` inside a loop over big slices          | `std.AutoHashMap(K, void)`, `StaticStringMap`, bitset, or sort + `binarySearch`                                                        |
+| Global mutex per item                    | `.lock(` inside per-item work                                          | `std.atomic.Value` for counters/flags; shard state per thread; batch under one lock                                                    |
+| Per-item parse                           | `std.json.parseFromSlice` per element/request                          | Parse once per batch; `parseFromSliceLeaky` + arena; `std.json.Scanner` streaming                                                      |
+| Per-item string formatting               | `std.fmt.allocPrint` in loop                                           | `std.fmt.bufPrint` into a stack buffer; `Io.Writer.Allocating`; preallocated `ArrayList(u8)`                                           |
+| Multi-KB struct passed by value per call | param `T` with `@sizeOf(T)` > ~64 in hot fn                            | `*const T`; `noalias` slices for outputs                                                                                               |
+| Thread spawn per item                    | `std.Thread.spawn` in loop                                             | `Io.Group` / `io.concurrent`; persistent workers + queue; partition a slice across `getCpuCount()` threads                             |
+| Runtime hashing of constant keys         | string compare/hash in hot loop for fixed key set                      | `StaticStringMap` (comptime hashing), `EnumMap`                                                                                        |
 
 ### 🟡 SIGNIFICANT (1.5x–4x, fix in hot paths)
 
-| Pattern | Detection | Fix |
-|---|---|---|
-| ArrayList growth per append | `.append(` in loop without `ensureUnusedCapacity`/`initCapacity` nearby | `ensureUnusedCapacity(gpa, n)` before loop, then `appendAssumeCapacity` |
-| HashMap regrowth | `.put(` bulk without `ensureTotalCapacity` | `ensureTotalCapacity` once; default max load is 80% |
-| Double hashing | `get` then `put` for same key | `getPtr`, `getOrPut`(+`AssumeCapacity`), `fetchPut` |
-| Dynamic dispatch in hot loop | fn-pointer field / vtable call per iteration | Comptime generic (`anytype`, `comptime` param); `inline fn`; batch calls |
-| Bounds checks in byte-level loops (ReleaseSafe) | heavy `slice[i]` indexing | Iterate `for (slice) \|*p\|` (checked once) or prove bounds and scope `@setRuntimeSafety(false)` to the loop only |
-| Branchy numeric loop | `if`/early `return` inside vectorizable loop body | Split loops, branchless math; `@branchHint(.unlikely)` on rare branch |
-| FP loop without fast math | plain `a*b+c` in tight float loop | `@mulAdd(f32, a, b, c)`; scoped `@setFloatMode(.optimized)` (changes reproducibility) |
-| Stable sort by default | `std.mem.sort` on large primitive arrays | `std.mem.sortUnstable` (pdq) unless stability is required |
-| Checked casts/arithmetic in ReleaseSafe loops | `@intCast`/`+` on values that provably fit | Same-width types, `@truncate`; wrapping (`+%`)/saturating (`+|`) ops only when semantics allow |
-| New writer per call | `Io.File.Writer.init`/`Allocating.init` inside loop | One writer, `clearRetainingCapacity()` between uses |
-| `toOwnedSlice` in loop | repeated `toOwnedSlice` on growing buffer | Keep the buffer + `items`/`shrinkAndFree`; `toOwnedSlice` may realloc/copy |
-| `std.log.*` per item | logging inside hot loop | Compile out via custom `std.Options.logFn` (no-op in release) or sample |
-| `items` pointer invalidation | iterating `list.items` while appending | Iterate by index up to pre-reserved capacity; reserve first |
+| Pattern                                         | Detection                                                               | Fix                                                                                                               |
+| ----------------------------------------------- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| ArrayList growth per append                     | `.append(` in loop without `ensureUnusedCapacity`/`initCapacity` nearby | `ensureUnusedCapacity(gpa, n)` before loop, then `appendAssumeCapacity`                                           |
+| HashMap regrowth                                | `.put(` bulk without `ensureTotalCapacity`                              | `ensureTotalCapacity` once; default max load is 80%                                                               |
+| Double hashing                                  | `get` then `put` for same key                                           | `getPtr`, `getOrPut`(+`AssumeCapacity`), `fetchPut`                                                               |
+| Dynamic dispatch in hot loop                    | fn-pointer field / vtable call per iteration                            | Comptime generic (`anytype`, `comptime` param); `inline fn`; batch calls                                          |
+| Bounds checks in byte-level loops (ReleaseSafe) | heavy `slice[i]` indexing                                               | Iterate `for (slice) \|*p\|` (checked once) or prove bounds and scope `@setRuntimeSafety(false)` to the loop only |
+| Branchy numeric loop                            | `if`/early `return` inside vectorizable loop body                       | Split loops, branchless math; `@branchHint(.unlikely)` on rare branch                                             |
+| FP loop without fast math                       | plain `a*b+c` in tight float loop                                       | `@mulAdd(f32, a, b, c)`; scoped `@setFloatMode(.optimized)` (changes reproducibility)                             |
+| Stable sort by default                          | `std.mem.sort` on large primitive arrays                                | `std.mem.sortUnstable` (pdq) unless stability is required                                                         |
+| Checked casts/arithmetic in ReleaseSafe loops   | `@intCast`/`+` on values that provably fit                              | Same-width types, `@truncate`; wrapping (`+%`)/saturating (`+                                                     | `) ops only when semantics allow |
+| New writer per call                             | `Io.File.Writer.init`/`Allocating.init` inside loop                     | One writer, `clearRetainingCapacity()` between uses                                                               |
+| `toOwnedSlice` in loop                          | repeated `toOwnedSlice` on growing buffer                               | Keep the buffer + `items`/`shrinkAndFree`; `toOwnedSlice` may realloc/copy                                        |
+| `std.log.*` per item                            | logging inside hot loop                                                 | Compile out via custom `std.Options.logFn` (no-op in release) or sample                                           |
+| `items` pointer invalidation                    | iterating `list.items` while appending                                  | Iterate by index up to pre-reserved capacity; reserve first                                                       |
 
 ### 🔵 MEMORY LAYOUT & ALIGNMENT (systemic, invisible in local microbenchmarks)
 
-| Pattern | Detection | Fix |
-|---|---|---|
-| AoS while only a subset of fields is hot | `[]SomeStruct` loop touching 1–2 fields | SoA: parallel slices or `std.MultiArrayList(T)` |
-| Padding waste | `@sizeOf(T)` much larger than sum of fields | Reorder fields (largest alignment first) in `extern struct`; nest; assert `@sizeOf` in tests |
-| False sharing | per-thread counters/atomics adjacent in memory | `align(std.atomic.cache_line)` + explicit pad; merge results at the end |
-| Pointer chasing in hot loop | linked list / tree traversal per element | Contiguous slices; `Treap`/lists only for their real ordering needs |
-| Unaligned access via cast | `@ptrCast` from `[]u8` to `*u32` etc. | `std.mem.readInt`/`writeInt` (endian-explicit), or explicit `*align(1) T` |
-| `@alignCast` as a silence tool | used without an alignment proof | Prove it or use `*align(1)`; a lying `@alignCast` is UB |
-| `packed struct` in hot iteration | packed fields read per iteration | `extern struct` or `align(1)` fields; packed access lowers to shifts/byte loads |
-| Big struct returned/copied by value | hot fn returning large struct | Out-param `*T` (with `noalias` when disjoint) |
-| Over-alignment everywhere | `align(64)` on non-contended data | Align only for atomics/DMA/cache isolation; over-alignment wastes cache and memory |
-| `[]bool` for dense flags | bool arrays scanned per item | `std.StaticBitSet` / `std.DynamicBitSet` |
-| Hot and cold fields mixed | rarely-read fields in per-item struct | Split: hot struct + `*const Cold` (or nested cold struct) |
+| Pattern                                  | Detection                                      | Fix                                                                                          |
+| ---------------------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| AoS while only a subset of fields is hot | `[]SomeStruct` loop touching 1–2 fields        | SoA: parallel slices or `std.MultiArrayList(T)`                                              |
+| Padding waste                            | `@sizeOf(T)` much larger than sum of fields    | Reorder fields (largest alignment first) in `extern struct`; nest; assert `@sizeOf` in tests |
+| False sharing                            | per-thread counters/atomics adjacent in memory | `align(std.atomic.cache_line)` + explicit pad; merge results at the end                      |
+| Pointer chasing in hot loop              | linked list / tree traversal per element       | Contiguous slices; `Treap`/lists only for their real ordering needs                          |
+| Unaligned access via cast                | `@ptrCast` from `[]u8` to `*u32` etc.          | `std.mem.readInt`/`writeInt` (endian-explicit), or explicit `*align(1) T`                    |
+| `@alignCast` as a silence tool           | used without an alignment proof                | Prove it or use `*align(1)`; a lying `@alignCast` is UB                                      |
+| `packed struct` in hot iteration         | packed fields read per iteration               | `extern struct` or `align(1)` fields; packed access lowers to shifts/byte loads              |
+| Big struct returned/copied by value      | hot fn returning large struct                  | Out-param `*T` (with `noalias` when disjoint)                                                |
+| Over-alignment everywhere                | `align(64)` on non-contended data              | Align only for atomics/DMA/cache isolation; over-alignment wastes cache and memory           |
+| `[]bool` for dense flags                 | bool arrays scanned per item                   | `std.StaticBitSet` / `std.DynamicBitSet`                                                     |
+| Hot and cold fields mixed                | rarely-read fields in per-item struct          | Split: hot struct + `*const Cold` (or nested cold struct)                                    |
 
 ### 🟣 BUILD CONFIG
 
-| Pattern | Detection | Fix |
-|---|---|---|
-| Debug in prod/bench | default optimize mode | `-Doptimize=ReleaseFast`; for bench steps `b.standardOptimizeOption(.{ .preferred_optimize_mode = .ReleaseFast })` |
-| No LTO across modules | multiple modules, no `lto` set | `exe.lto = .full` (CLI `-flto=full`) — needed for cross-module inlining |
-| Baseline CPU codegen | no `-mcpu` for a known fleet | `-mcpu=native` locally, or resolve target with `.cpu_model = .native`; ship baseline + dispatch if distributed |
-| Missing frame pointers while profiling | release build omits them | `-fno-omit-frame-pointer` for profiling runs only |
-| Blind faith in codegen | assuming vectorization/inlining happened | `-femit-asm` and inspect; `-femit-llvm-ir` for deep dives |
-| `ReleaseSmall` as perf build | size-first mode in prod | `ReleaseSmall` optimizes size; expect slower code |
-| Single-threaded app built default | tiny CLI with no threads | `-fsingle-threaded` removes TLS/atomics overhead (breaks `std.Thread` use) |
+| Pattern                                | Detection                                | Fix                                                                                                                |
+| -------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Debug in prod/bench                    | default optimize mode                    | `-Doptimize=ReleaseFast`; for bench steps `b.standardOptimizeOption(.{ .preferred_optimize_mode = .ReleaseFast })` |
+| No LTO across modules                  | multiple modules, no `lto` set           | `exe.lto = .full` (CLI `-flto=full`) — needed for cross-module inlining                                            |
+| Baseline CPU codegen                   | no `-mcpu` for a known fleet             | `-mcpu=native` locally, or resolve target with `.cpu_model = .native`; ship baseline + dispatch if distributed     |
+| Missing frame pointers while profiling | release build omits them                 | `-fno-omit-frame-pointer` for profiling runs only                                                                  |
+| Blind faith in codegen                 | assuming vectorization/inlining happened | `-femit-asm` and inspect; `-femit-llvm-ir` for deep dives                                                          |
+| `ReleaseSmall` as perf build           | size-first mode in prod                  | `ReleaseSmall` optimizes size; expect slower code                                                                  |
+| Single-threaded app built default      | tiny CLI with no threads                 | `-fsingle-threaded` removes TLS/atomics overhead (breaks `std.Thread` use)                                         |
 
 ### 🕐 STDLIB NOTES (Zig 0.16)
 
-| Pattern | Issue | Fix |
-|---|---|---|
-| `std.ArrayList(T)` managed vs unmanaged confusion | 0.16: `std.ArrayList(T)` is unmanaged; `.empty` init; methods take `gpa` | `var l: std.ArrayList(T) = .empty; try l.append(gpa, x); l.deinit(gpa);` Managed convenience: `std.array_list.Managed(T)` (cold paths only) |
-| stdout writes | `std.debug.print` locks; per-write syscalls | `var buf: [8192]u8 = undefined; var fw: std.Io.File.Writer = .init(.stdout(), init.io, &buf); const w = &fw.interface; try w.print(...); try w.flush();` |
-| String building | `allocPrint` churn, runtime concatenation | `Io.Writer.Allocating` (`.init(gpa)`, `.writer`, `.written()`, `.toOwnedSlice()`), `bufPrint` |
-| JSON parse | per-item `parseFromSlice`; leaks if `Parsed` not deinit'd | One parse per payload; `parseFromSliceLeaky` + arena; `std.json.Scanner` for big streams; `std.json.Stringify` for output |
-| Threads | `std.Thread.Pool` and `WaitGroup` do not exist in 0.16 | `Io.Group` / `io.concurrent`; `std.Thread.spawn` + manual partitioning for persistent workers |
-| Sync primitives | `std.Thread.Mutex/RwLock/Condition` moved | `std.Io.Mutex` / `Io.RwLock` / `Io.Condition` / `Io.Semaphore` (io-aware) |
-| Atomics ordering | defaulting to seq_cst everywhere | `std.atomic.Value` with `.monotonic` counters, `.acquire`/`.release` pairs; spin loops with `std.atomic.spinLoopHint()` |
-| Overlapping copies | `@memcpy` on overlapping regions is UB | `std.mem.copyForwards`/`copyBackwards` for overlap |
-| Benchmarks with `std.testing.allocator` | leak-tracking allocator skews timing | Bench with the prod allocator (`smp_allocator`), not testing/DebugAllocator |
-| Timing | `std.time.Timer` is gone in 0.16 | `std.Io.Clock.awake.now(io)` (or `.cpu_thread`/`.cpu_process`) → `Timestamp.untilNow(io, clock)` → `Duration.nanoseconds` |
-| Cache line hardcode | `64` in source | `std.atomic.cache_line` (0.16 resolves to 128 on x86_64/aarch64, varies by CPU) |
-| Queue via `ArrayList` + `orderedRemove(0)` | O(n) shift per pop | `std.Deque(T)` ring buffer; `PriorityQueue`/`Treap` for ordered access |
+| Pattern                                           | Issue                                                                    | Fix                                                                                                                                                      |
+| ------------------------------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `std.ArrayList(T)` managed vs unmanaged confusion | 0.16: `std.ArrayList(T)` is unmanaged; `.empty` init; methods take `gpa` | `var l: std.ArrayList(T) = .empty; try l.append(gpa, x); l.deinit(gpa);` Managed convenience: `std.array_list.Managed(T)` (cold paths only)              |
+| stdout writes                                     | `std.debug.print` locks; per-write syscalls                              | `var buf: [8192]u8 = undefined; var fw: std.Io.File.Writer = .init(.stdout(), init.io, &buf); const w = &fw.interface; try w.print(...); try w.flush();` |
+| String building                                   | `allocPrint` churn, runtime concatenation                                | `Io.Writer.Allocating` (`.init(gpa)`, `.writer`, `.written()`, `.toOwnedSlice()`), `bufPrint`                                                            |
+| JSON parse                                        | per-item `parseFromSlice`; leaks if `Parsed` not deinit'd                | One parse per payload; `parseFromSliceLeaky` + arena; `std.json.Scanner` for big streams; `std.json.Stringify` for output                                |
+| Threads                                           | `std.Thread.Pool` and `WaitGroup` do not exist in 0.16                   | `Io.Group` / `io.concurrent`; `std.Thread.spawn` + manual partitioning for persistent workers                                                            |
+| Sync primitives                                   | `std.Thread.Mutex/RwLock/Condition` moved                                | `std.Io.Mutex` / `Io.RwLock` / `Io.Condition` / `Io.Semaphore` (io-aware)                                                                                |
+| Atomics ordering                                  | defaulting to seq_cst everywhere                                         | `std.atomic.Value` with `.monotonic` counters, `.acquire`/`.release` pairs; spin loops with `std.atomic.spinLoopHint()`                                  |
+| Overlapping copies                                | `@memcpy` on overlapping regions is UB                                   | `std.mem.copyForwards`/`copyBackwards` for overlap                                                                                                       |
+| Benchmarks with `std.testing.allocator`           | leak-tracking allocator skews timing                                     | Bench with the prod allocator (`smp_allocator`), not testing/DebugAllocator                                                                              |
+| Timing                                            | `std.time.Timer` is gone in 0.16                                         | `std.Io.Clock.awake.now(io)` (or `.cpu_thread`/`.cpu_process`) → `Timestamp.untilNow(io, clock)` → `Duration.nanoseconds`                                |
+| Cache line hardcode                               | `64` in source                                                           | `std.atomic.cache_line` (0.16 resolves to 128 on x86_64/aarch64, varies by CPU)                                                                          |
+| Queue via `ArrayList` + `orderedRemove(0)`        | O(n) shift per pop                                                       | `std.Deque(T)` ring buffer; `PriorityQueue`/`Treap` for ordered access                                                                                   |
 
 ### 🟢 CODE QUALITY (perf-neutral, correctness-adjacent)
 
-| Pattern | Issue | Fix |
-|---|---|---|
-| `catch unreachable` on real errors | `unreachable` is UB in `ReleaseFast` if actually reached | Proper error handling; `unreachable` only for proven invariants |
-| `@setRuntimeSafety(false)` file-wide | disables all checks everywhere | Scope to a proven loop; keep top-level safe |
-| Reading `undefined` memory | Works by accident in Debug, UB in release | Initialize, or prove full overwrite before read |
-| `_ = expr;` in benchmarks | Compiler may delete the computation (DCE) | `std.mem.doNotOptimizeAway(expr)` |
-| `@intCast` on unvalidated input | Panics in safe modes, UB if elided | `std.math.cast` or explicit bounds check |
-| Mutating a list while iterating `list.items` | `items` is invalidated by growth | Reserve capacity, then index; or iterate a snapshot |
+| Pattern                                      | Issue                                                    | Fix                                                             |
+| -------------------------------------------- | -------------------------------------------------------- | --------------------------------------------------------------- |
+| `catch unreachable` on real errors           | `unreachable` is UB in `ReleaseFast` if actually reached | Proper error handling; `unreachable` only for proven invariants |
+| `@setRuntimeSafety(false)` file-wide         | disables all checks everywhere                           | Scope to a proven loop; keep top-level safe                     |
+| Reading `undefined` memory                   | Works by accident in Debug, UB in release                | Initialize, or prove full overwrite before read                 |
+| `_ = expr;` in benchmarks                    | Compiler may delete the computation (DCE)                | `std.mem.doNotOptimizeAway(expr)`                               |
+| `@intCast` on unvalidated input              | Panics in safe modes, UB if elided                       | `std.math.cast` or explicit bounds check                        |
+| Mutating a list while iterating `list.items` | `items` is invalidated by growth                         | Reserve capacity, then index; or iterate a snapshot             |
 
 ## Data Structure Guidance
 
-| Context | Use | Avoid |
-|---|---|---|
-| Dynamic array | `std.ArrayList(T)` (unmanaged) + `ensureUnusedCapacity` | managed wrapper in hot paths; append-without-reserve |
-| Struct-of-arrays of a record type | `std.MultiArrayList(T)` — `items(.field)` gives `[]Field` | `[]T` when only a few fields are hot |
-| Scratch allocations in a hot loop | `std.heap.stackFallback(N, gpa).get()` on stack, `FixedBufferAllocator` | heap alloc/free per item |
-| Batched lifetime (request, frame, job) | `ArenaAllocator`, `reset(.retain_capacity)` after each batch | individual `free` bookkeeping |
-| Per-frame scratch (draw lists, instance data) | frame arena reset per frame; pre-reserved `ArrayList`/SoA | allocator calls or unbounded growth in the frame callback |
-| Same mesh, many objects | instancing (`.PER_INSTANCE` attrs, `sg.draw(base, num, instances)`) | one draw call per object |
-| Comptime-known string keys | `std.StaticStringMap(V)` | `StringHashMap` for a fixed command/flag list |
-| Enum keys | `std.EnumMap(K, V)` (direct array index, no hashing) | `StringHashMap` keyed by `@tagName` |
-| Integer keys | `std.AutoHashMap(K, V)`; `getPtr`/`getOrPut` to avoid double lookup | repeated `get`+`put`; linear `std.mem.indexOf` |
-| Membership / dedup | `std.AutoHashMap(K, void)`; bitset for dense IDs | `[]T` scanned per item (O(n²)) |
-| FIFO / ring buffer | `std.Deque(T)` (`pushBackAssumeCapacity`, `popFront`) | `ArrayList` + `orderedRemove(0)` |
-| Min/max heap | `std.PriorityQueue(T, ...)` | sort per insert |
-| Ordered map without heavy deletes | `std.Treap(Entry, cmp)` where `Entry` carries key + value | sorted `ArrayList` + `insert` (O(n) shifts) |
-| Read-only sorted data | Sort once + `std.sort.binarySearch` / `upperBound` | per-query re-scan or re-sort |
-| Dense flags | `StaticBitSet` / `DynamicBitSet` | `[]bool` (1 byte per flag, poor cache) |
-| Small fixed collections | plain arrays, or `std.ArrayList` backed by `FixedBufferAllocator` | heap for a handful of elements |
+| Context                                       | Use                                                                     | Avoid                                                     |
+| --------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------- |
+| Dynamic array                                 | `std.ArrayList(T)` (unmanaged) + `ensureUnusedCapacity`                 | managed wrapper in hot paths; append-without-reserve      |
+| Struct-of-arrays of a record type             | `std.MultiArrayList(T)` — `items(.field)` gives `[]Field`               | `[]T` when only a few fields are hot                      |
+| Scratch allocations in a hot loop             | `std.heap.stackFallback(N, gpa).get()` on stack, `FixedBufferAllocator` | heap alloc/free per item                                  |
+| Batched lifetime (request, frame, job)        | `ArenaAllocator`, `reset(.retain_capacity)` after each batch            | individual `free` bookkeeping                             |
+| Per-frame scratch (draw lists, instance data) | frame arena reset per frame; pre-reserved `ArrayList`/SoA               | allocator calls or unbounded growth in the frame callback |
+| Same mesh, many objects                       | instancing (`.PER_INSTANCE` attrs, `sg.draw(base, num, instances)`)     | one draw call per object                                  |
+| Comptime-known string keys                    | `std.StaticStringMap(V)`                                                | `StringHashMap` for a fixed command/flag list             |
+| Enum keys                                     | `std.EnumMap(K, V)` (direct array index, no hashing)                    | `StringHashMap` keyed by `@tagName`                       |
+| Integer keys                                  | `std.AutoHashMap(K, V)`; `getPtr`/`getOrPut` to avoid double lookup     | repeated `get`+`put`; linear `std.mem.indexOf`            |
+| Membership / dedup                            | `std.AutoHashMap(K, void)`; bitset for dense IDs                        | `[]T` scanned per item (O(n²))                            |
+| FIFO / ring buffer                            | `std.Deque(T)` (`pushBackAssumeCapacity`, `popFront`)                   | `ArrayList` + `orderedRemove(0)`                          |
+| Min/max heap                                  | `std.PriorityQueue(T, ...)`                                             | sort per insert                                           |
+| Ordered map without heavy deletes             | `std.Treap(Entry, cmp)` where `Entry` carries key + value               | sorted `ArrayList` + `insert` (O(n) shifts)               |
+| Read-only sorted data                         | Sort once + `std.sort.binarySearch` / `upperBound`                      | per-query re-scan or re-sort                              |
+| Dense flags                                   | `StaticBitSet` / `DynamicBitSet`                                        | `[]bool` (1 byte per flag, poor cache)                    |
+| Small fixed collections                       | plain arrays, or `std.ArrayList` backed by `FixedBufferAllocator`       | heap for a handful of elements                            |
 
 ## Alignment, Layout, SoA
 
@@ -216,14 +216,14 @@ fn scaleAdd(dst: []f32, src: []const f32, s: f32) void {
 
 ## Allocator Guidance
 
-| Need | Allocator | Notes |
-|---|---|---|
-| Batch work (request, frame, job) | `std.heap.ArenaAllocator` + `reset(.retain_capacity)` | O(1) teardown; reset returns memory to the arena, not the OS |
-| Small scratch in hot fn | `std.heap.stackFallback(N, gpa).get()` | Stack first, heap on overflow; call `.get()` once, not per item |
-| Fixed worst-case buffer | `std.heap.FixedBufferAllocator` | No failure path when sized right; `reset()` between uses |
-| Long-lived prod allocations | `std.heap.smp_allocator` / `c_allocator` | `smp_allocator` is the modern thread-safe general allocator |
-| Debugging / leak checks | `std.heap.DebugAllocator(.{})`, `std.testing.allocator` | Never benchmark with these |
-| Huge blocks | `page_allocator` | Only when you need pages, never per item |
+| Need                             | Allocator                                               | Notes                                                           |
+| -------------------------------- | ------------------------------------------------------- | --------------------------------------------------------------- |
+| Batch work (request, frame, job) | `std.heap.ArenaAllocator` + `reset(.retain_capacity)`   | O(1) teardown; reset returns memory to the arena, not the OS    |
+| Small scratch in hot fn          | `std.heap.stackFallback(N, gpa).get()`                  | Stack first, heap on overflow; call `.get()` once, not per item |
+| Fixed worst-case buffer          | `std.heap.FixedBufferAllocator`                         | No failure path when sized right; `reset()` between uses        |
+| Long-lived prod allocations      | `std.heap.smp_allocator` / `c_allocator`                | `smp_allocator` is the modern thread-safe general allocator     |
+| Debugging / leak checks          | `std.heap.DebugAllocator(.{})`, `std.testing.allocator` | Never benchmark with these                                      |
+| Huge blocks                      | `page_allocator`                                        | Only when you need pages, never per item                        |
 
 Every `allocator.alloc` is an indirect call through the `Allocator` vtable plus bookkeeping — in a hot loop that dominates. Prefer APIs that touch the allocator only on growth (`ArrayList` unmanaged takes `gpa` per call but only uses it when growing) and reserve up front.
 
@@ -244,44 +244,44 @@ A healthy frame: no allocations outside a frame arena, no logging, no GPU object
 
 ### 🔴 Frame-callback violations (hitch per frame)
 
-| Pattern | Detection | Fix |
-|---|---|---|
-| GPU object creation in frame | `sg.makeBuffer/makeImage/makeShader/makePipeline/makeView` reachable from `frame` | Make in `init`, destroy in `cleanup`; one pipeline per blend/depth/MSAA combo |
-| Writing a buffer after binding it | `sg.writeBufferTransient` interleaved with `applyBindings` | Transient writes must finish before the buffer is bound: build all frame data first, then draw |
-| Many writes to one buffer per frame | several `sg.writeBufferTransient`/legacy `updateBuffer` calls on one buffer | Pack all per-frame data; one write per buffer per frame; sub-ranges via `.dst.offset` (4-byte aligned) |
-| Allocations in frame | `allocator.alloc`, `allocPrint`, `ArrayList.append` without reserve | Frame arena + `reset(.retain_capacity)`; reserve in `init`; scratch structs |
-| Logging per frame | `std.debug.print` / `std.log` in `frame` | Dev flag only — stderr mutex + syscalls eat frame time |
-| GPU readback in frame | copying image data to a staging buffer and reading it each frame | Readbacks stall the pipeline; screenshots/picking on demand only |
-| Per-frame pipeline churn | shaders/pipelines rebuilt for state variants | Cache pipelines at init; hot-reload only in dev |
-| Unbounded frame growth | arrays whose capacity only ever grows | Clamp and reuse; watch capacity, not just length |
+| Pattern                             | Detection                                                                         | Fix                                                                                                    |
+| ----------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| GPU object creation in frame        | `sg.makeBuffer/makeImage/makeShader/makePipeline/makeView` reachable from `frame` | Make in `init`, destroy in `cleanup`; one pipeline per blend/depth/MSAA combo                          |
+| Writing a buffer after binding it   | `sg.writeBufferTransient` interleaved with `applyBindings`                        | Transient writes must finish before the buffer is bound: build all frame data first, then draw         |
+| Many writes to one buffer per frame | several `sg.writeBufferTransient`/legacy `updateBuffer` calls on one buffer       | Pack all per-frame data; one write per buffer per frame; sub-ranges via `.dst.offset` (4-byte aligned) |
+| Allocations in frame                | `allocator.alloc`, `allocPrint`, `ArrayList.append` without reserve               | Frame arena + `reset(.retain_capacity)`; reserve in `init`; scratch structs                            |
+| Logging per frame                   | `std.debug.print` / `std.log` in `frame`                                          | Dev flag only — stderr mutex + syscalls eat frame time                                                 |
+| GPU readback in frame               | copying image data to a staging buffer and reading it each frame                  | Readbacks stall the pipeline; screenshots/picking on demand only                                       |
+| Per-frame pipeline churn            | shaders/pipelines rebuilt for state variants                                      | Cache pipelines at init; hot-reload only in dev                                                        |
+| Unbounded frame growth              | arrays whose capacity only ever grows                                             | Clamp and reuse; watch capacity, not just length                                                       |
 
 ### 🟡 Draw organization & bandwidth
 
-| Pattern | Detection | Fix |
-|---|---|---|
-| Draw call per object/sprite | `sg.draw` inside per-entity loops | Instancing (`.PER_INSTANCE` attrs) or merged static geometry; a handful of draws per frame |
-| State ping-pong | alternating `applyPipeline`/`applyBindings` between two sets | Sort draws by pipeline → bindings; sokol_gfx tracks current state, but every real switch costs backend calls. Audit with `sg.queryStats()` (`num_draw`, `num_apply_pipeline`) |
-| Texture switch per sprite | many different views per frame | Texture atlas: one view, UV offsets in vertex data |
-| Whole-buffer upload for a small change | full-size write for a small update | Partial write with `.dst.offset` |
-| Per-frame math on AoS | transform loops over `[]struct` | SoA + `@Vector`/`@mulAdd`; precompute static matrices once (see SoA section) |
-| Overdraw | stacked transparent quads, big full-screen blends | Opaque front-to-back for early-Z; MSAA 4x unless proven otherwise |
-| No culling | every entity submitted every frame | Frustum/AABB per batch; SoA positions are SIMD-friendly |
-| Rebuilt large bindings per draw | big `sg.Bindings` copies every draw | One bindings struct, mutate offsets |
+| Pattern                                | Detection                                                    | Fix                                                                                                                                                                           |
+| -------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Draw call per object/sprite            | `sg.draw` inside per-entity loops                            | Instancing (`.PER_INSTANCE` attrs) or merged static geometry; a handful of draws per frame                                                                                    |
+| State ping-pong                        | alternating `applyPipeline`/`applyBindings` between two sets | Sort draws by pipeline → bindings; sokol_gfx tracks current state, but every real switch costs backend calls. Audit with `sg.queryStats()` (`num_draw`, `num_apply_pipeline`) |
+| Texture switch per sprite              | many different views per frame                               | Texture atlas: one view, UV offsets in vertex data                                                                                                                            |
+| Whole-buffer upload for a small change | full-size write for a small update                           | Partial write with `.dst.offset`                                                                                                                                              |
+| Per-frame math on AoS                  | transform loops over `[]struct`                              | SoA + `@Vector`/`@mulAdd`; precompute static matrices once (see SoA section)                                                                                                  |
+| Overdraw                               | stacked transparent quads, big full-screen blends            | Opaque front-to-back for early-Z; MSAA 4x unless proven otherwise                                                                                                             |
+| No culling                             | every entity submitted every frame                           | Frustum/AABB per batch; SoA positions are SIMD-friendly                                                                                                                       |
+| Rebuilt large bindings per draw        | big `sg.Bindings` copies every draw                          | One bindings struct, mutate offsets                                                                                                                                           |
 
 ### 🕐 sokol API notes
 
-| API | Use | Perf notes |
-|---|---|---|
-| `.usage.write_transient` + `sg.writeBufferTransient` | Per-frame dynamic data consumed the same frame | Write before bind; pack into one write; transient staging sizing (Vulkan: `.vulkan.transient_staging_buffer_size`) |
-| `.usage.write_unsealed` + `writeBufferUnsealed`/`sealBuffer` | Immutable resource assembled from several writes at load | Avoids repeated updates after init |
-| `bind.vertex_buffer_offsets`, `bind.index_buffer_offset` | Many geometries/draws from one buffer | No re-upload, no buffer rebinding |
-| `sg.draw(base, num, instances)`, `sg.drawEx(...)` | Instancing; base vertex/instance | Cheapest way to scale object count |
-| `sg.queryStats()` | Per-frame counters: draws, `apply_*` calls, write bytes | The regression meter for batching |
-| `sapp.frameDuration()` / `frameDurationUnfiltered()` | dt vs jank profiling | Smoothed value blends toward refresh rate; use unfiltered for measurements |
-| `stm.setup()` + `stm.laptime(&last)` | Explicit frame ms (`sokol.time`) | Keep measurement out of shipping hot path |
-| `.disable_vsync`, `.high_dpi`, `sapp.dpiScale()` | Pacing and display scaling | vsync off only for benchmarks; high-DPI costs fill rate |
-| `sg.queryBackend()` | Shader desc; backend branches | macOS default Metal; `-Dgl=true`/`-Dvulkan=true` are build options — bench what you ship |
-| Staging + `sg.copyBufferToImage` | Runtime atlas/region updates | Batch copies; not as bad as readbacks, still not free |
+| API                                                          | Use                                                      | Perf notes                                                                                                         |
+| ------------------------------------------------------------ | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `.usage.write_transient` + `sg.writeBufferTransient`         | Per-frame dynamic data consumed the same frame           | Write before bind; pack into one write; transient staging sizing (Vulkan: `.vulkan.transient_staging_buffer_size`) |
+| `.usage.write_unsealed` + `writeBufferUnsealed`/`sealBuffer` | Immutable resource assembled from several writes at load | Avoids repeated updates after init                                                                                 |
+| `bind.vertex_buffer_offsets`, `bind.index_buffer_offset`     | Many geometries/draws from one buffer                    | No re-upload, no buffer rebinding                                                                                  |
+| `sg.draw(base, num, instances)`, `sg.drawEx(...)`            | Instancing; base vertex/instance                         | Cheapest way to scale object count                                                                                 |
+| `sg.queryStats()`                                            | Per-frame counters: draws, `apply_*` calls, write bytes  | The regression meter for batching                                                                                  |
+| `sapp.frameDuration()` / `frameDurationUnfiltered()`         | dt vs jank profiling                                     | Smoothed value blends toward refresh rate; use unfiltered for measurements                                         |
+| `stm.setup()` + `stm.laptime(&last)`                         | Explicit frame ms (`sokol.time`)                         | Keep measurement out of shipping hot path                                                                          |
+| `.disable_vsync`, `.high_dpi`, `sapp.dpiScale()`             | Pacing and display scaling                               | vsync off only for benchmarks; high-DPI costs fill rate                                                            |
+| `sg.queryBackend()`                                          | Shader desc; backend branches                            | macOS default Metal; `-Dgl=true`/`-Dvulkan=true` are build options — bench what you ship                           |
+| Staging + `sg.copyBufferToImage`                             | Runtime atlas/region updates                             | Batch copies; not as bad as readbacks, still not free                                                              |
 
 ### Frame-loop skeleton
 
@@ -394,6 +394,7 @@ totals: N🔴 N🟡 N🔵 N🟣 N🕐 N🎮 N🟢
 ## Auto-clarity
 
 Drop terseness for UB and correctness risks: `@setRuntimeSafety(false)`, `unreachable`/`catch unreachable`, `@alignCast`, wrapping/overflow operators, unaligned casts, `-mcpu=native` portability. Always explain the "why":
+
 - Why `Debug` numbers are meaningless for release decisions (checks, no inlining/vectorization).
 - Why `page_allocator` per item is a syscall and `smp_allocator` is not.
 - Why `ReleaseFast` turns overflow and failed `unreachable` into UB rather than panics.

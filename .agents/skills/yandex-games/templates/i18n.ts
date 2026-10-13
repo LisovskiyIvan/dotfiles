@@ -2,7 +2,7 @@
 // Bilingual localization system for Russian (ru) and English (en).
 // Language automatically determined via Yandex Games SDK (Requirement 2.14).
 
-export type Lang = 'ru' | 'en';
+export type Lang = "ru" | "en";
 
 export interface DictStrings {
   title: string;
@@ -17,29 +17,29 @@ export interface DictStrings {
 
 const DICTIONARY: Record<Lang, DictStrings> = {
   ru: {
-    title: 'Название Игры',
-    score: 'СЧЁТ: {n}',
-    best: 'РЕКОРД: {n}',
-    gameOver: 'ИГРА ОКОНЧЕНА',
-    restart: 'ИГРАТЬ СНОВА',
-    reviveAd: 'ВОЗРОДИТЬСЯ (РЕКЛАМА)',
-    howToPlay: 'КАК ИГРАТЬ',
+    title: "Название Игры",
+    score: "СЧЁТ: {n}",
+    best: "РЕКОРД: {n}",
+    gameOver: "ИГРА ОКОНЧЕНА",
+    restart: "ИГРАТЬ СНОВА",
+    reviveAd: "ВОЗРОДИТЬСЯ (РЕКЛАМА)",
+    howToPlay: "КАК ИГРАТЬ",
   },
   en: {
-    title: 'Game Title',
-    score: 'SCORE: {n}',
-    best: 'BEST: {n}',
-    gameOver: 'GAME OVER',
-    restart: 'PLAY AGAIN',
-    reviveAd: 'REVIVE (AD)',
-    howToPlay: 'HOW TO PLAY',
+    title: "Game Title",
+    score: "SCORE: {n}",
+    best: "BEST: {n}",
+    gameOver: "GAME OVER",
+    restart: "PLAY AGAIN",
+    reviveAd: "REVIVE (AD)",
+    howToPlay: "HOW TO PLAY",
   },
 };
 
-let currentLang: Lang = 'ru';
+let currentLang: Lang = "ru";
 
 export function setLanguage(lang: Lang): void {
-  currentLang = lang === 'en' ? 'en' : 'ru';
+  currentLang = lang === "en" ? "en" : "ru";
   document.documentElement.lang = currentLang;
 }
 
@@ -47,7 +47,10 @@ export function getLanguage(): Lang {
   return currentLang;
 }
 
-export function t(key: string, params?: Record<string, string | number>): string {
+export function t(
+  key: string,
+  params?: Record<string, string | number>,
+): string {
   let text = DICTIONARY[currentLang]?.[key] ?? DICTIONARY.ru[key] ?? key;
   if (params) {
     for (const [k, v] of Object.entries(params)) {
@@ -62,15 +65,15 @@ export function t(key: string, params?: Record<string, string | number>): string
  * Example: <span data-i18n="gameOver"></span>
  */
 export function applyI18nToDOM(root: ParentNode = document): void {
-  root.querySelectorAll<HTMLElement>('[data-i18n]').forEach((el) => {
+  root.querySelectorAll<HTMLElement>("[data-i18n]").forEach((el) => {
     const key = el.dataset.i18n;
     if (key) el.textContent = t(key);
   });
-  root.querySelectorAll<HTMLElement>('[data-i18n-html]').forEach((el) => {
+  root.querySelectorAll<HTMLElement>("[data-i18n-html]").forEach((el) => {
     const key = el.dataset.i18nHtml;
     if (key) el.innerHTML = t(key);
   });
-  root.querySelectorAll<HTMLElement>('[data-i18n-title]').forEach((el) => {
+  root.querySelectorAll<HTMLElement>("[data-i18n-title]").forEach((el) => {
     const key = el.dataset.i18nTitle;
     if (key) el.title = t(key);
   });

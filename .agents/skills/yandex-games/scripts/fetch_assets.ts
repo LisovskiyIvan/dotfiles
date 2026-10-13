@@ -10,9 +10,12 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const BASE_BLOCK_URL = "https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.20.1/assets/minecraft/textures/block/";
-const BASE_ITEM_URL = "https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.20.1/assets/minecraft/textures/item/";
-const BASE_SOUND_URL = "https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.20.1/assets/minecraft/sounds/";
+const BASE_BLOCK_URL =
+  "https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.20.1/assets/minecraft/textures/block/";
+const BASE_ITEM_URL =
+  "https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.20.1/assets/minecraft/textures/item/";
+const BASE_SOUND_URL =
+  "https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.20.1/assets/minecraft/sounds/";
 
 // Common default blocks
 const blocks = [
@@ -32,7 +35,7 @@ const blocks = [
   "obsidian.png",
   "bookshelf.png",
   "sand.png",
-  "ice.png"
+  "ice.png",
 ];
 
 // Common items
@@ -44,7 +47,7 @@ const items = [
   "apple.png",
   "golden_apple.png",
   "cookie.png",
-  "totem_of_undying.png"
+  "totem_of_undying.png",
 ];
 
 // Common audio effects
@@ -52,7 +55,7 @@ const sounds = [
   { name: "pop.ogg", url: BASE_SOUND_URL + "random/pop.ogg" },
   { name: "click.ogg", url: BASE_SOUND_URL + "random/click.ogg" },
   { name: "explode.ogg", url: BASE_SOUND_URL + "random/explode1.ogg" },
-  { name: "levelup.ogg", url: BASE_SOUND_URL + "random/levelup.ogg" }
+  { name: "levelup.ogg", url: BASE_SOUND_URL + "random/levelup.ogg" },
 ];
 
 async function download(url: string, dest: string) {
@@ -76,17 +79,26 @@ async function download(url: string, dest: string) {
 async function main() {
   console.log("Fetching block textures...");
   for (const block of blocks) {
-    await download(`${BASE_BLOCK_URL}${block}`, path.join("public", "assets", "blocks", block));
+    await download(
+      `${BASE_BLOCK_URL}${block}`,
+      path.join("public", "assets", "blocks", block),
+    );
   }
 
   console.log("Fetching item textures...");
   for (const item of items) {
-    await download(`${BASE_ITEM_URL}${item}`, path.join("public", "assets", "items", item));
+    await download(
+      `${BASE_ITEM_URL}${item}`,
+      path.join("public", "assets", "items", item),
+    );
   }
 
   console.log("Fetching sound effects...");
   for (const sound of sounds) {
-    await download(sound.url, path.join("public", "assets", "sounds", sound.name));
+    await download(
+      sound.url,
+      path.join("public", "assets", "sounds", sound.name),
+    );
   }
 
   console.log("Asset fetching completed!");

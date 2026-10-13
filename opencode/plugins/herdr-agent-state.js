@@ -69,7 +69,9 @@ function requestOnce(method, params) {
   const socketEndpoint =
     process.platform === "win32" ? `\\\\.\\pipe\\${socketPath}` : socketPath;
 
-  const requestId = `${SOURCE}:${Date.now()}:${Math.floor(Math.random() * 1_000_000)
+  const requestId = `${SOURCE}:${Date.now()}:${Math.floor(
+    Math.random() * 1_000_000,
+  )
     .toString()
     .padStart(6, "0")}`;
   const request = {
@@ -122,14 +124,21 @@ function ownsLocalLifecycle() {
   const args = process.argv.slice(2);
   const separator = args.indexOf("--");
   if (separator !== -1) args.splice(separator);
-  if (args.some((arg) => arg === "--attach" || arg.startsWith("--attach="))) return false;
-  while (args[0] === "--print-logs" || args[0] === "--log-level" || args[0]?.startsWith("--log-level=")) {
+  if (args.some((arg) => arg === "--attach" || arg.startsWith("--attach=")))
+    return false;
+  while (
+    args[0] === "--print-logs" ||
+    args[0] === "--log-level" ||
+    args[0]?.startsWith("--log-level=")
+  ) {
     args.splice(0, args[0] === "--log-level" ? 2 : 1);
   }
   // These local clients have no TUI plugin. Shared servers and the TUI worker
   // cannot identify their attached panes; their lifecycle belongs to each TUI.
-  return args[0] === "run" ||
-    (!["serve", "web", "attach"].includes(args[0]) && args.includes("--mini"));
+  return (
+    args[0] === "run" ||
+    (!["serve", "web", "attach"].includes(args[0]) && args.includes("--mini"))
+  );
 }
 
 export const HerdrAgentStatePlugin = async () => {

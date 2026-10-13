@@ -60,7 +60,7 @@ export class YandexClient {
   public sdk: YandexSDK | null = null;
   public player: YandexPlayer | null = null;
   public isPlatform = false;
-  public lang: 'ru' | 'en' = 'ru';
+  public lang: "ru" | "en" = "ru";
   private lastInterstitialAt = 0;
   private readonly INTERSTITIAL_COOLDOWN_MS = 60_000;
 
@@ -69,11 +69,14 @@ export class YandexClient {
    * @param onPause Called when platform requests pause (e.g. ad opens or tab unfocused) -> MUTE AUDIO & PAUSE GAME
    * @param onResume Called when platform resumes -> UNMUTE AUDIO & RESUME GAME
    */
-  public async init({ onPause, onResume }: { onPause?: () => void; onResume?: () => void } = {}): Promise<void> {
+  public async init({
+    onPause,
+    onResume,
+  }: { onPause?: () => void; onResume?: () => void } = {}): Promise<void> {
     // Check manual override query param for testing: ?lang=ru or ?lang=en
-    const urlLang = new URLSearchParams(window.location.search).get('lang');
+    const urlLang = new URLSearchParams(window.location.search).get("lang");
     if (urlLang) {
-      this.lang = urlLang.toLowerCase().startsWith('ru') ? 'ru' : 'en';
+      this.lang = urlLang.toLowerCase().startsWith("ru") ? "ru" : "en";
     }
 
     const hasYaGames = await this.waitForYaGames(2000);
@@ -82,8 +85,8 @@ export class YandexClient {
         this.sdk = await window.YaGames.init();
         this.isPlatform = this.detectPlatform(this.sdk);
 
-        this.sdk.on?.('game_api_pause', () => onPause?.());
-        this.sdk.on?.('game_api_resume', () => onResume?.());
+        this.sdk.on?.("game_api_pause", () => onPause?.());
+        this.sdk.on?.("game_api_resume", () => onResume?.());
 
         // CRITICAL: always touch sdk.environment.i18n.lang, even when ?lang override is present.
         // The draft debug panel lights the 文 ("I18N is used", req. 2.14) indicator by the FACT
@@ -91,9 +94,9 @@ export class YandexClient {
         // Correct order: read SDK first, then let ?lang override the RESULT (priority unchanged).
         const sdkLang = this.sdk.environment?.i18n?.lang;
         if (urlLang) {
-          this.lang = urlLang.toLowerCase().startsWith('ru') ? 'ru' : 'en';
+          this.lang = urlLang.toLowerCase().startsWith("ru") ? "ru" : "en";
         } else if (sdkLang) {
-          this.lang = sdkLang.toLowerCase().startsWith('ru') ? 'ru' : 'en';
+          this.lang = sdkLang.toLowerCase().startsWith("ru") ? "ru" : "en";
         }
 
         try {
@@ -102,12 +105,12 @@ export class YandexClient {
           // Guest player mode: cloud saves fallback to localStorage
         }
       } catch (err) {
-        console.info('[YandexSDK] Running in standalone fallback mode:', err);
+        console.info("[YandexSDK] Running in standalone fallback mode:", err);
       }
     } else {
-      const navLang = navigator.language || 'ru';
+      const navLang = navigator.language || "ru";
       if (!urlLang) {
-        this.lang = navLang.toLowerCase().startsWith('ru') ? 'ru' : 'en';
+        this.lang = navLang.toLowerCase().startsWith("ru") ? "ru" : "en";
       }
     }
 
@@ -129,23 +132,31 @@ export class YandexClient {
   private detectPlatform(sdk: YandexSDK): boolean {
     try {
       const ao = (window.location as any).ancestorOrigins;
-      if (ao && ao.length > 0) return [...ao].some((o: string) => /(^|\.)yandex\./.test(o));
-      if (document.referrer) return /(^|\.)yandex\./.test(new URL(document.referrer).hostname);
+      if (ao && ao.length > 0)
+        return [...ao].some((o: string) => /(^|\.)yandex\./.test(o));
+      if (document.referrer)
+        return /(^|\.)yandex\./.test(new URL(document.referrer).hostname);
     } catch (_) {}
     return !!(sdk as any).deviceInfo?.type;
   }
 
   // --- Mandatory Moderation Lifecycle Calls ---
   public loadingReady(): void {
-    try { this.sdk?.features?.LoadingAPI?.ready(); } catch (_) {}
+    try {
+      this.sdk?.features?.LoadingAPI?.ready();
+    } catch (_) {}
   }
 
   public gameplayStart(): void {
-    try { this.sdk?.features?.GameplayAPI?.start(); } catch (_) {}
+    try {
+      this.sdk?.features?.GameplayAPI?.start();
+    } catch (_) {}
   }
 
   public gameplayStop(): void {
-    try { this.sdk?.features?.GameplayAPI?.stop(); } catch (_) {}
+    try {
+      this.sdk?.features?.GameplayAPI?.stop();
+    } catch (_) {}
   }
 
   /**
@@ -157,19 +168,25 @@ export class YandexClient {
    * All sources — game_api_pause/resume, visibilitychange, blur/focus —
    * funnel into one pause/resume pair owned by the game.
    */
-  public bindLifecycleHandlers({ onPause, onResume }: { onPause?: () => void; onResume?: () => void } = {}): void {
-    document.addEventListener('visibilitychange', () => {
+  public bindLifecycleHandlers({
+    onPause,
+    onResume,
+  }: { onPause?: () => void; onResume?: () => void } = {}): void {
+    document.addEventListener("visibilitychange", () => {
       if (document.hidden) onPause?.();
       else onResume?.();
     });
-    window.addEventListener('blur', () => onPause?.());
-    window.addEventListener('focus', () => onResume?.());
+    window.addEventListener("blur", () => onPause?.());
+    window.addEventListener("focus", () => onResume?.());
   }
 
   // --- Interstitial Ads (60s Cooldown, Natural Pauses Only) ---
   public showFullscreenAdv(onClose?: (wasShown: boolean) => void): void {
     const now = Date.now();
-    if (!this.isPlatform || now - this.lastInterstitialAt < this.INTERSTITIAL_COOLDOWN_MS) {
+    if (
+      !this.isPlatform ||
+      now - this.lastInterstitialAt < this.INTERSTITIAL_COOLDOWN_MS
+    ) {
       onClose?.(false);
       return;
     }
@@ -196,9 +213,12 @@ export class YandexClient {
   }
 
   // --- Rewarded Video (User-Initiated, Safe Callback) ---
-  public showRewardedVideo(onReward: () => void, onClose?: (rewarded: boolean) => void): void {
+  public showRewardedVideo(
+    onReward: () => void,
+    onClose?: (rewarded: boolean) => void,
+  ): void {
     if (!this.isPlatform) {
-      console.info('[YandexSDK] Standalone mock: Rewarded video granted');
+      console.info("[YandexSDK] Standalone mock: Rewarded video granted");
       onReward();
       onClose?.(true);
       return;
@@ -250,7 +270,10 @@ export class YandexClient {
   }
 
   // --- Cloud Saves with localStorage Fallback ---
-  public async loadData<T extends Record<string, any>>(key: string, fallback: T): Promise<T> {
+  public async loadData<T extends Record<string, any>>(
+    key: string,
+    fallback: T,
+  ): Promise<T> {
     const local = localStorage.getItem(key);
     let result = local ? JSON.parse(local) : fallback;
 
@@ -275,7 +298,10 @@ export class YandexClient {
   }
 
   // --- Leaderboards ---
-  public async submitScore(leaderboardName: string, score: number): Promise<void> {
+  public async submitScore(
+    leaderboardName: string,
+    score: number,
+  ): Promise<void> {
     if (!this.player || !this.isPlatform) return;
     try {
       const lb = await this.sdk?.getLeaderboards();
