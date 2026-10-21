@@ -84,9 +84,9 @@ return {
         "oxlint",
         "ols",
       },
-      -- tsgo isn't a Mason package (install via `npm i -g @typescript/native-preview`),
+      -- tsrs isn't a Mason package (install via `bun add -g tsrs`),
       -- and we must stop Mason from auto-enabling the installed typescript-language-server.
-      automatic_enable = { exclude = { "ts_ls" } },
+      automatic_enable = { exclude = { "ts_ls", "vtsls" } },
     },
   },
 

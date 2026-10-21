@@ -17,6 +17,11 @@ enabled = true
 [ui.toast]
 delivery = "system"
 
+[ui.sidebar]
+
+[ui.sidebar.agents]
+rows = [["state_icon", "machine", "workspace", "tab"], ["agent"]]
+
 [experimental]
 kitty_graphics = true
 switch_ascii_input_source_in_prefix = false

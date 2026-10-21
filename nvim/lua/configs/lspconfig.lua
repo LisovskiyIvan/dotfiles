@@ -3,9 +3,9 @@ require("configs.lsp-fix") -- workaround for Neovim 0.12 LSP cursor out-of-range
 
 local nvlsp = require "nvchad.configs.lspconfig"
 
-if vim.lsp.disable then
-  vim.lsp.disable "vtsls"
-end
+-- Neovim 0.11+: отключение сервера = `vim.lsp.enable(name, false)`.
+-- TS-серверы кроме tsrs выключены, иначе дублируются диагностики.
+pcall(vim.lsp.enable, { "tsgo", "ts_ls", "vtsls" }, false)
 
 local capabilities = vim.deepcopy(nvlsp.capabilities)
 if
@@ -21,10 +21,20 @@ local packages_path = mason_path .. "/packages/typescript-language-server/node_m
 local tsdk_path = packages_path .. "/typescript/lib"
 local roblox_types_path = vim.fn.stdpath "config" .. "/types/globalTypes.d.luau"
 
-vim.lsp.config("tsgo", {
+-- tsrs — TypeScript LSP на Rust (вместо tsgo).
+-- Установка: `bun add -g tsrs` (бинарь в ~/.bun/bin/tsrs).
+local tsrs_path = vim.fn.exepath "tsrs"
+if tsrs_path == "" then
+  tsrs_path = vim.fn.expand "~/.bun/bin/tsrs"
+end
+
+vim.lsp.config("tsrs", {
   on_attach = nvlsp.on_attach,
   on_init = nvlsp.on_init,
   capabilities = capabilities,
+  cmd = { tsrs_path, "--lsp", "-stdio" },
+  filetypes = { "typescript", "typescriptreact", "javascript", "javascriptreact" },
+  root_markers = { "tsconfig.json", "jsconfig.json", "package.json", ".git" },
 })
 
 vim.lsp.config("vue_ls", {
@@ -228,7 +238,6 @@ vim.lsp.config("v_analyzer", {
 })
 
 for _, server in ipairs {
-  "tsgo",
   "vue_ls",
   "gopls",
   "rust_analyzer",
@@ -245,6 +254,9 @@ for _, server in ipairs {
 } do
   pcall(vim.lsp.enable, server)
 end
+
+-- tsrs включаем только если бинарь найден, иначе будет ошибка спавна на каждый TS-буфер
+pcall(vim.lsp.enable, "tsrs", vim.uv.fs_stat(tsrs_path) ~= nil)
 -- 0.12: vim.lsp.enable() авто-стартует на FileType, doautoall больше не нужен
 -- Оставлен только для обратной совместимости с 0.11, в 0.12 можно удалить блок выше
 
