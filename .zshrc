@@ -59,3 +59,6 @@ export PATH="/Users/ivan/.local/bin:$PATH"
 
 # GigaCode CLI v3
 export PATH="/Users/ivan/.gigacode/bin:$PATH"
+
+# Goose programming language
+export PATH="/Users/ivan/.local/opt/goose:$PATH"

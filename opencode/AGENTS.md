@@ -20,16 +20,18 @@ Never add "caveman mode on" prefix. No duplicate normal+caveman answer.
 
 ## Typecheck, lint, format (TS/JS)
 
-Use Bun's built-in tooling. Never fall back to `tsc --noEmit`, eslint, or prettier.
+Typecheck with `tsrs` (TypeScript 7 native CLI, drop-in `tsc` replacement). Never use `tsc` or `bun check`.
+Lint and format with oxc: `oxlint` + `oxfmt`. Never use eslint, prettier, biome, `bun lint`, or `bun fmt`.
 
-- Typecheck: `bun check` (uses nearest `tsconfig.json`, follows imports and project references).
-  Scope it to what changed: `bun check src/foo.ts` checks that file and its imports.
-  Run full `bun check` when `tsconfig.json` or many files changed.
-- Lint: `bun lint`. Autofix with `bun lint --fix <files>`; re-run `bun check` afterward if the fixer rewrote code.
-- Format: handled automatically — OpenCode runs `bun fmt` on every file it writes or edits.
-  For files changed outside those tools (shell redirection, git operations), run `bun fmt <files>` yourself; verify with `bun fmt --check`.
+- Typecheck: `tsrs --noEmit` (uses nearest `tsconfig.json`, follows imports and project references).
+  Always project-wide: files on the command line make `tsrs` ignore `tsconfig.json` (TS5112) and lose `types`/`lib`.
+  Other project: `tsrs --noEmit -p path/to/tsconfig.json`.
+- Lint: `oxlint <files>`. Autofix with `oxlint --fix <files>`; re-run `tsrs --noEmit` afterward if the fixer rewrote code.
+- Format: `oxfmt <files>` writes in place; `oxfmt --check <files>` verifies. JS/TS only.
+  Handled automatically — OpenCode runs the formatter on every file it writes or edits.
+  For files changed outside those tools (shell redirection, git operations), run `oxfmt <files>` yourself.
 
-Before reporting TS/JS work as done, run `bun check` and `bun lint` on the touched files and fix any errors.
+Before reporting TS/JS work as done, run `tsrs --noEmit` (project-wide) and `oxlint <files>` on the touched files and fix any errors.
 
 ## Library docs
 

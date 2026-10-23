@@ -15,10 +15,7 @@ async function rewrite(command: string): Promise<string | undefined> {
       stdout: "pipe",
       stderr: "ignore",
     });
-    const [stdout] = await Promise.all([
-      new Response(proc.stdout).text(),
-      proc.exited,
-    ]);
+    const [stdout] = await Promise.all([new Response(proc.stdout).text(), proc.exited]);
     const rewritten = stdout.trim();
     return rewritten && rewritten !== command ? rewritten : undefined;
   } catch {

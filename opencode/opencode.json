@@ -20,9 +20,8 @@
   "formatter": {
     "prettier": { "disabled": true },
     "biome": { "disabled": true },
-    "oxfmt": { "disabled": true },
-    "bun-fmt": {
-      "command": ["bun", "fmt", "$FILE"],
+    "oxfmt": {
+      "command": ["oxfmt", "$FILE"],
       "extensions": [
         ".js",
         ".jsx",
@@ -31,16 +30,7 @@
         ".ts",
         ".tsx",
         ".mts",
-        ".cts",
-        ".json",
-        ".jsonc",
-        ".css",
-        ".html",
-        ".htm",
-        ".md",
-        ".mdx",
-        ".yaml",
-        ".yml"
+        ".cts"
       ]
     }
   },

@@ -212,6 +212,99 @@ vim.lsp.config("c3lsp", {
   end,
 })
 
+-- goose — Goose Programming Language (aardappel/goose).
+-- Компилер сам является языковым сервером: `goose lsp` говорит LSP по stdin/stdout.
+-- Бинарь не в Mason, ставится вручную: https://aardappel.github.io/goose/
+local function find_goose()
+  local found = vim.fn.exepath "goose"
+  if found ~= "" then
+    return found
+  end
+
+  -- PATH не всегда содержит goose (nvim запущен не из login-шелла) — ищем вручную.
+  for _, path in ipairs {
+    vim.fn.expand "~/.local/opt/goose/goose",
+    vim.fn.expand "~/.local/bin/goose",
+    vim.fn.expand "~/.local/opt/goose/bin/goose",
+    "/opt/homebrew/bin/goose",
+    "/usr/local/bin/goose",
+  } do
+    if vim.fn.executable(path) == 1 then
+      return path
+    end
+  end
+
+  return ""
+end
+
+local goose_path = find_goose()
+
+-- stdlib лежит рядом с бинарём; если goose запущен из symlink/другого префикса —
+-- передаём путь явно, иначе сервер не найдёт стандартную библиотеку.
+local goose_cmd = { goose_path ~= "" and goose_path or "goose", "lsp" }
+if goose_path ~= "" then
+  local real = vim.uv.fs_realpath(goose_path) or goose_path
+  local stdlib = vim.fs.joinpath(vim.fs.dirname(real), "stdlib")
+  if vim.fn.isdirectory(stdlib) == 1 then
+    goose_cmd = { goose_path, "lsp", "--stdlib", stdlib }
+  end
+end
+
+-- root: ищем .git вверх, иначе берём каталог файла (иначе сервер не стартует)
+local function goose_root(bufnr, on_dir)
+  local fname = vim.api.nvim_buf_get_name(bufnr)
+  local start_dir = fname ~= "" and vim.fs.dirname(fname) or vim.uv.cwd()
+  local root = vim.fs.find({ ".git" }, {
+    path = start_dir,
+    upward = true,
+  })[1]
+
+  on_dir(root and vim.fs.dirname(root) or start_dir)
+end
+
+vim.lsp.config("goose", {
+  on_attach = nvlsp.on_attach,
+  on_init = nvlsp.on_init,
+  capabilities = capabilities,
+  cmd = goose_cmd,
+  filetypes = { "goose" },
+  root_dir = goose_root,
+  -- Чтобы импортируемый модуль проверялся как часть программы, укажи entry-файл:
+  -- init_options = { entryFiles = { "/abs/path/to/project/main.goose" } },
+})
+
+-- Бинарь не найден — говорим прямо, а не молча.
+local goose_warned = false
+local function goose_warn()
+  if goose_path ~= "" or goose_warned then
+    return
+  end
+  goose_warned = true
+  vim.notify(
+    "goose LSP: бинарь не найден. Установи из https://aardappel.github.io/goose/ "
+      .. "или добавь ~/.local/opt/goose в PATH",
+    vim.log.levels.WARN
+  )
+end
+
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "goose",
+  callback = goose_warn,
+})
+
+-- :GooseLSP — диагностика (бинарь, клиент, диагностика)
+vim.api.nvim_create_user_command("GooseLSP", function()
+  local clients = vim.lsp.get_clients { name = "goose" }
+  local lines = {
+    "goose binary: " .. (goose_path ~= "" and goose_path or "NOT FOUND"),
+    "enabled: " .. tostring(vim.lsp.is_enabled "goose"),
+    "clients: " .. (#clients > 0 and "yes" or "no"),
+    "filetype: " .. vim.bo.filetype,
+    "diagnostics: " .. #vim.diagnostic.get(0),
+  }
+  print(table.concat(lines, "\n"))
+end, {})
+
 vim.lsp.config("v_analyzer", {
   on_attach = nvlsp.on_attach,
   on_init = nvlsp.on_init,
@@ -257,6 +350,13 @@ end
 
 -- tsrs включаем только если бинарь найден, иначе будет ошибка спавна на каждый TS-буфер
 pcall(vim.lsp.enable, "tsrs", vim.uv.fs_stat(tsrs_path) ~= nil)
+-- goose тоже не в Mason: включаем только если бинарь найден
+if goose_path ~= "" then
+  local ok, err = pcall(vim.lsp.enable, "goose")
+  if not ok then
+    vim.notify("goose LSP: " .. tostring(err), vim.log.levels.ERROR)
+  end
+end
 -- 0.12: vim.lsp.enable() авто-стартует на FileType, doautoall больше не нужен
 -- Оставлен только для обратной совместимости с 0.11, в 0.12 можно удалить блок выше
 

@@ -47,9 +47,7 @@ const SESSION_STATE_BY_STATUS = new Map([
 
 function stateFromSessionStatus(status) {
   const kind = typeof status === "string" ? status : status?.type;
-  return typeof kind === "string"
-    ? SESSION_STATE_BY_STATUS.get(kind.toLowerCase())
-    : undefined;
+  return typeof kind === "string" ? SESSION_STATE_BY_STATUS.get(kind.toLowerCase()) : undefined;
 }
 
 function request(method, params) {
@@ -66,12 +64,9 @@ function requestOnce(method, params) {
     return Promise.resolve();
   }
 
-  const socketEndpoint =
-    process.platform === "win32" ? `\\\\.\\pipe\\${socketPath}` : socketPath;
+  const socketEndpoint = process.platform === "win32" ? `\\\\.\\pipe\\${socketPath}` : socketPath;
 
-  const requestId = `${SOURCE}:${Date.now()}:${Math.floor(
-    Math.random() * 1_000_000,
-  )
+  const requestId = `${SOURCE}:${Date.now()}:${Math.floor(Math.random() * 1_000_000)
     .toString()
     .padStart(6, "0")}`;
   const request = {
@@ -124,8 +119,7 @@ function ownsLocalLifecycle() {
   const args = process.argv.slice(2);
   const separator = args.indexOf("--");
   if (separator !== -1) args.splice(separator);
-  if (args.some((arg) => arg === "--attach" || arg.startsWith("--attach=")))
-    return false;
+  if (args.some((arg) => arg === "--attach" || arg.startsWith("--attach="))) return false;
   while (
     args[0] === "--print-logs" ||
     args[0] === "--log-level" ||
@@ -136,8 +130,7 @@ function ownsLocalLifecycle() {
   // These local clients have no TUI plugin. Shared servers and the TUI worker
   // cannot identify their attached panes; their lifecycle belongs to each TUI.
   return (
-    args[0] === "run" ||
-    (!["serve", "web", "attach"].includes(args[0]) && args.includes("--mini"))
+    args[0] === "run" || (!["serve", "web", "attach"].includes(args[0]) && args.includes("--mini"))
   );
 }
 
