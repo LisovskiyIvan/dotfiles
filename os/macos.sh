@@ -2,7 +2,10 @@
 
 CONFIG_TARGETS=(
   "nvim::${HOME}/.config/nvim"
-  "zed::${HOME}/Library/Application Support/Zed"
+  "zed/settings.json::${HOME}/Library/Application Support/Zed/settings.json"
+  "zed/keymap.json::${HOME}/Library/Application Support/Zed/keymap.json"
+  "zed/snippets::${HOME}/Library/Application Support/Zed/snippets"
+  "zed/themes::${HOME}/Library/Application Support/Zed/themes"
   ".wezterm.lua::${HOME}/.wezterm.lua"
   ".zshrc::${HOME}/.zshrc"
   ".aerospace.toml::${HOME}/.aerospace.toml"

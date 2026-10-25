@@ -6,6 +6,16 @@ show_agent_labels_on_pane_borders = false
 status_indicators = "dots"
 [keys]
 prefix = "ctrl+a"
+# Workspaces: Alt+j/k = down/up
+next_workspace = "alt+j"
+previous_workspace = "alt+k"
+# New workspace: prefix+w (picker moved to prefix+u)
+new_workspace = ["prefix+shift+n", "prefix+w"]
+workspace_picker = "prefix+u"
+# Tabs: Alt+h/l = left/right; new tab = prefix+t
+previous_tab = ["prefix+p", "alt+h"]
+next_tab = ["prefix+n", "alt+l"]
+new_tab = ["prefix+c", "prefix+t"]
 
 [theme]
 name = "rose-pine"

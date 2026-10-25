@@ -19,7 +19,6 @@ end
 local mason_path = vim.fn.stdpath "data" .. "/mason"
 local packages_path = mason_path .. "/packages/typescript-language-server/node_modules"
 local tsdk_path = packages_path .. "/typescript/lib"
-local roblox_types_path = vim.fn.stdpath "config" .. "/types/globalTypes.d.luau"
 
 -- tsrs — TypeScript LSP на Rust (вместо tsgo).
 -- Установка: `bun add -g tsrs` (бинарь в ~/.bun/bin/tsrs).
@@ -131,44 +130,6 @@ vim.lsp.config("gleam", {
 
     on_dir(root and vim.fs.dirname(root) or start_dir)
   end,
-})
-
-vim.lsp.config("luau_lsp", {
-  on_attach = nvlsp.on_attach,
-  on_init = nvlsp.on_init,
-  capabilities = capabilities,
-  cmd = { "luau-lsp", "lsp", "--definitions:@roblox=" .. roblox_types_path },
-  filetypes = { "luau" },
-  root_dir = function(bufnr, on_dir)
-    local fname = vim.api.nvim_buf_get_name(bufnr)
-    local start_dir = fname ~= "" and vim.fs.dirname(fname) or vim.uv.cwd()
-    local root = vim.fs.find({ ".luaurc", "default.project.json", ".git" }, {
-      path = start_dir,
-      upward = true,
-    })[1]
-
-    on_dir(root and vim.fs.dirname(root) or start_dir)
-  end,
-  settings = {
-    ["luau-lsp"] = {
-      platform = {
-        type = "roblox",
-      },
-      sourcemap = {
-        enabled = true,
-        autogenerate = true,
-        sourcemapFile = "sourcemap.json",
-        rojoProjectFile = "default.project.json",
-        rojoPath = vim.fn.exepath "rojo",
-      },
-      completion = {
-        imports = {
-          enabled = true,
-          suggestRequires = true,
-        },
-      },
-    },
-  },
 })
 
 vim.lsp.config("oxlint", {
@@ -341,7 +302,6 @@ for _, server in ipairs {
   "gleam",
   "c3lsp",
   "v_analyzer",
-  "luau_lsp",
   "ols",
   "oxlint",
 } do

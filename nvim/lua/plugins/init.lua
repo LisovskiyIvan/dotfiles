@@ -80,7 +80,6 @@ return {
         "clangd",
         "zls",
         -- "v_analyzer", -- patched manually, do not let Mason overwrite
-        "luau_lsp",
         "oxlint",
         "ols",
       },
@@ -97,7 +96,6 @@ return {
     opts = {
       ensure_installed = {
         "stylua",
-        "selene",
         "clang_format",
       },
     },
@@ -133,28 +131,6 @@ return {
         image = '', -- не заменять ![](path) иконкой
       },
     },
-  },
-
-  {
-    "mfussenegger/nvim-lint",
-    event = { "BufReadPre", "BufNewFile" },
-    config = function()
-      local lint = require "lint"
-      lint.linters_by_ft = {
-        lua = { "selene" },
-        luau = { "selene" },
-      }
-      vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "InsertLeave" }, {
-        callback = function()
-          local root = vim.fs.root(0, { "selene.toml", ".luaurc", ".git" })
-          if root then
-            lint.try_lint(nil, { cwd = root })
-          else
-            lint.try_lint()
-          end
-        end,
-      })
-    end,
   },
 
   -- test new blink
@@ -232,7 +208,6 @@ return {
         "gleam",
         "odin",
         "c3",
-        "luau",
         "v",
         "goose",
       },

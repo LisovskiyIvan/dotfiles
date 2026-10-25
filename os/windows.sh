@@ -12,7 +12,10 @@
 
 CONFIG_TARGETS=(
   "nvim::${config_home}/nvim"
-  "zed::${app_data}/Zed"
+  "zed/settings.json::${app_data}/Zed/settings.json"
+  "zed/keymap.json::${app_data}/Zed/keymap.json"
+  "zed/snippets::${app_data}/Zed/snippets"
+  "zed/themes::${app_data}/Zed/themes"
   ".wezterm.lua::${user_home}/.wezterm.lua"
   ".zshrc::${user_home}/.zshrc"
 )
