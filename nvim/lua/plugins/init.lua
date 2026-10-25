@@ -127,8 +127,19 @@ return {
     ft = "markdown",
     dependencies = { "nvim-treesitter/nvim-treesitter", "echasnovski/mini.icons" },
     opts = {
+      -- Спокойный вид без иконок/значков в gutter и плашек языка у кода.
+      preset = "lazy",
+      heading = {
+        width = "block", -- фон заголовка только под текстом, не во всю ширину
+      },
+      code = {
+        style = "normal", -- без строки с языком над блоком
+      },
+      quote = {
+        icon = "│",
+      },
       link = {
-        image = '', -- не заменять ![](path) иконкой
+        image = "", -- не заменять ![](path) иконкой
       },
     },
   },

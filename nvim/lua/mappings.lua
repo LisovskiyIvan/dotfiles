@@ -75,6 +75,7 @@ end, { desc = "Git blame (full)" })
 map("n", "<leader>uw", function()
   vim.wo.wrap = not vim.wo.wrap
 end, { desc = "Toggle soft wrap" })
+map("n", "<leader>um", "<cmd>RenderMarkdown toggle<cr>", { desc = "Toggle markdown render" })
 
 -- Search
 map("n", "<leader>s", function()
