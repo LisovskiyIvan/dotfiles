@@ -15,6 +15,13 @@ vim.filetype.add {
     goose = "goose",
     tscn = "godot_scene",
     tres = "godot_resource",
+    glsl = "glsl",
+    vert = "glsl",
+    tesc = "glsl",
+    tese = "glsl",
+    frag = "glsl",
+    geom = "glsl",
+    comp = "glsl",
   },
 }
 

@@ -114,6 +114,15 @@ vim.lsp.config("zls", {
   capabilities = capabilities,
 })
 
+vim.lsp.config("glsl_analyzer", {
+  on_attach = nvlsp.on_attach,
+  on_init = nvlsp.on_init,
+  capabilities = capabilities,
+  cmd = { "glsl_analyzer" },
+  filetypes = { "glsl", "vert", "tesc", "tese", "frag", "geom", "comp" },
+  root_markers = { ".git" },
+  single_file_support = true,
+})
 vim.lsp.config("gleam", {
   on_attach = nvlsp.on_attach,
   on_init = nvlsp.on_init,
@@ -304,6 +313,7 @@ for _, server in ipairs {
   "v_analyzer",
   "ols",
   "oxlint",
+  "glsl_analyzer",
 } do
   pcall(vim.lsp.enable, server)
 end

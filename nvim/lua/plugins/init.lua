@@ -82,6 +82,7 @@ return {
         -- "v_analyzer", -- patched manually, do not let Mason overwrite
         "oxlint",
         "ols",
+        "glsl_analyzer",
       },
       -- tsrs isn't a Mason package (install via `bun add -g tsrs`),
       -- and we must stop Mason from auto-enabling the installed typescript-language-server.
@@ -221,6 +222,7 @@ return {
         "c3",
         "v",
         "goose",
+        "glsl",
       },
       indent = { enable = true },
     },
