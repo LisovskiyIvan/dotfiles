@@ -6,15 +6,15 @@ show_agent_labels_on_pane_borders = false
 status_indicators = "dots"
 [keys]
 prefix = "ctrl+a"
-# Workspaces: Alt+j/k = down/up
-next_workspace = "alt+j"
-previous_workspace = "alt+k"
+# Workspaces: Alt+j/k = down/up (Latin + Cyrillic for Russian layout)
+next_workspace = ["alt+j", "alt+о"]
+previous_workspace = ["alt+k", "alt+л"]
 # New workspace: prefix+w (picker moved to prefix+u)
 new_workspace = ["prefix+shift+n", "prefix+w"]
 workspace_picker = "prefix+u"
-# Tabs: Alt+h/l = left/right; new tab = prefix+t
-previous_tab = ["prefix+p", "alt+h"]
-next_tab = ["prefix+n", "alt+l"]
+# Tabs: Alt+h/l = left/right; new tab = prefix+t (Latin + Cyrillic for Russian layout)
+previous_tab = ["prefix+p", "alt+h", "alt+р"]
+next_tab = ["prefix+n", "alt+l", "alt+д"]
 new_tab = ["prefix+c", "prefix+t"]
 
 [theme]
@@ -34,4 +34,4 @@ rows = [["state_icon", "machine", "workspace", "tab"], ["agent"]]
 
 [experimental]
 kitty_graphics = true
-switch_ascii_input_source_in_prefix = false
+switch_ascii_input_source_in_prefix = true
