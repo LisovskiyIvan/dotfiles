@@ -54,3 +54,14 @@ Load skill `js-perf` (`skills/js-perf/SKILL.md` or `.agents/skills/js-perf/SKILL
 - reviewing JS/TS hot paths, loops >10K, per-frame code, data pipelines
 
 Scan only hot paths. Use priority tiers (🔴 critical, 🟡 significant, 🔵 V8 deopt, 🕐 regexp, 🟢 quality). Output concise but keep severity format `path:line: emoji: pattern. fix`. Totals at end: `N🔴 N🟡 N🔵 N🕐 N🟢`. Keep caveman brevity otherwise — no extra prose unless user asks подробнее.
+
+## PR prep
+
+Load skill `pr-prep` (`skills/pr-prep/SKILL.md` or `.agents/skills/pr-prep/SKILL.md`) when:
+
+- preparing a branch for pull request
+- reviewing all commits in a branch for cleanup
+- removing redundant code, dead code, self-test files, or noisy comments
+- pre-merge cleanup before push
+
+Review the whole branch, not only the latest commit. Preserve behavior, delete only with references checked, and run tests/typecheck/lint before reporting done.
