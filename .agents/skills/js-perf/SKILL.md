@@ -1569,6 +1569,88 @@ compute(10, 0); // Direct register pass, 0 stack frame adaptation!
 
 ---
 
+### 24. Chromium Back/Forward Cache (bfcache) Optimization & Traps
+
+The **Back/Forward Cache (bfcache)** in Chromium preserves the entire JavaScript execution context, DOM tree, and V8 heap in RAM when a user navigates away from a page, allowing instantaneous (**0 ms**) restoration when navigating back or forward.
+
+#### What Destroys bfcache Eligibility
+If your page triggers any of the following, Chromium purges the page from memory, forcing a cold reload on back navigation:
+* ❌ **The `unload` Listener**: Never use `window.addEventListener('unload', ...)`. It permanently disqualifies the page from bfcache. Use `window.addEventListener('pagehide', ...)` instead.
+* ❌ **Open Network Handles**: Open `WebSocket` connections, active `WebRTC` peer connections, or unclosed `IndexedDB` transactions prevent bfcache. Close or pause them in `pagehide`.
+* ❌ **`Cache-Control: no-store`**: Setting `no-store` on the main document disables bfcache.
+
+#### Safe Pagehide / Pageshow Lifecycle
+```javascript
+// ✅ Correct bfcache lifecycle management:
+window.addEventListener('pagehide', (event) => {
+  // If moving into bfcache, pause background tasks, workers, and audio
+  if (event.persisted) {
+    pauseAudio();
+    stopHeavyPolling();
+  }
+});
+
+window.addEventListener('pageshow', (event) => {
+  // Page was restored instantly from bfcache without page reload!
+  if (event.persisted) {
+    resumeAudio();
+    startHeavyPolling();
+  }
+});
+```
+
+---
+
+### 25. V8 Property Allocation: In-Object vs Out-of-Object & Slack Tracking
+
+In V8, object properties are stored in three different memory locations with vastly different access times:
+
+1. **In-Object Properties (Fastest)**:
+   Stored directly inside the `JSObject` memory block immediately following the object's Map pointer. Access requires **0 extra pointer dereferences** (direct fixed offset load).
+2. **Out-of-Object Properties (Slower)**:
+   When an object has more properties than in-object capacity, V8 allocates a separate `FixedArray` backing store. Accessing these requires loading the array pointer first, adding an extra memory dereference.
+3. **In-Object Slack Tracking**:
+   When constructing instances via `new Constructor()`, V8 initially allocates a generous slack buffer (typically room for 10 in-object fields). After 7 instances are created, V8 permanently prunes the slack to the exact number of fields assigned in the constructor.
+   * **The Trap**: If you assign `obj.extraProp = 1` *after* construction, the pruned in-object storage cannot accommodate it. V8 is forced to allocate an out-of-object `FixedArray`!
+   * **Rule**: Always initialize every property inside the constructor or factory function.
+
+---
+
+### 26. Chromium Priority Hints & Resource Prioritization (`fetchpriority`)
+
+In HTTP/2 and HTTP/3, all requests share a single multiplexed TCP/QUIC connection. Chromium prioritizes stream bandwidth using an internal scheduling queue:
+
+#### Explicit Prioritization via `fetchpriority`
+* **`fetchpriority="high"` for LCP**: Ensures hero images and critical WebAssembly binaries are requested ahead of lower-priority styles and scripts.
+* **`fetchpriority="low"` for Background Analytics**: Prevents analytics or secondary assets from blocking critical network bandwidth:
+
+```html
+<!-- ✅ Prioritize hero banner for instant Largest Contentful Paint (LCP) -->
+<img src="/hero.webp" fetchpriority="high" alt="Hero">
+
+<!-- ✅ De-prioritize analytics script to free bandwidth for 3D/WASM assets -->
+<script src="/analytics.js" fetchpriority="low" async></script>
+```
+
+```javascript
+// ✅ Fetch critical WASM binary with high priority
+const wasmPromise = fetch('/engine.wasm', { priority: 'high' });
+```
+
+---
+
+### 27. V8 BigInt Performance: When NOT to Use BigInt
+
+JavaScript `BigInt` ($100n$) allows arbitrary-precision integers, but comes at an immense runtime penalty in performance-critical code:
+
+#### The Heap Allocation Overhead
+* Standard numbers $\le 2^{31}-1$ are stored directly in CPU registers as unboxed **Smi** values (0 memory allocation).
+* Every `BigInt` operation (e.g. `a + b`, `a * b`, `a & b`) cannot fit in hardware registers. V8 must allocate a new heap object (`v8::internal::BigInt`) containing an array of 64-bit digits.
+* **Performance Penalty**: In tight numeric loops, `BigInt` operations are **15x–50x slower** than 32-bit integer operations and flood the V8 Young Generation with garbage.
+* **Rule**: Use `BigInt` strictly for 64-bit hashes, database IDs, or cryptographic keys. Never use `BigInt` for loop iterators, coordinates, physics math, or audio samples.
+
+---
+
 ## Browser-Specific Notes (V8 / Chrome)
 
 - **Bun's JIT is more aggressive** than V8 at inlining `forEach`/`reduce`. Code that flies in Bun may crawl in Chrome.
@@ -1661,6 +1743,10 @@ compute(10, 0); // Direct register pass, 0 stack frame adaptation!
 - Don't use nested regex quantifiers like `(a+)+` on user-supplied strings — triggers catastrophic backtracking (ReDoS), locking the Chromium main thread at 100% CPU. Use string methods (`includes`, `startsWith`) or atomic checks.
 - Don't attach non-passive `touchstart`/`touchmove` event listeners to scrollable containers — forces the Compositor thread to pause scrolling for main-thread JS execution; use CSS `touch-action: pan-y` for 100% GPU scrolling.
 - Don't call hot functions with fluctuating argument counts (mismatched arity) — triggers V8's `ArgumentsAdaptorTrampoline`, forcing stack reallocation instead of direct hardware register passing.
+- Don't use `window.addEventListener('unload')` — permanently disables Chromium's Back/Forward Cache (bfcache), destroying 0ms instant back-navigation; use `pagehide`.
+- Don't assign new properties to objects after construction — bypasses V8 in-object slack tracking, forcing out-of-object `FixedArray` allocation with an extra memory dereference.
+- Don't leave analytics or non-critical asset fetches unprioritized on HTTP/2/3 — tag with `fetchpriority="low"` to avoid stealing network bandwidth from LCP images and WASM binaries.
+- Don't use `BigInt` for high-frequency loop counters, coordinates, or audio samples — every operation allocates a heap object in V8, running 15x–50x slower than unboxed 32-bit Smis.
 
 ## Benchmarking Methodology
 

@@ -1939,6 +1939,122 @@ pxScene->addBroadPhaseRegions(regions, 16);
 
 ---
 
+## 📊 PhysX Collision Shape Performance Hierarchy
+
+Not all PhysX collision shapes are equal. The narrowphase cost varies dramatically depending on the geometric complexity of the collision algorithm:
+
+### Shape Cost Ranking (Fastest to Slowest)
+| Rank | Shape | Algorithm | Relative Cost |
+| :---: | :--- | :--- | :--- |
+| 1 | **Sphere vs Sphere** | Analytic: single distance check `‖c1 - c2‖ < r1 + r2` | **1x** (baseline) |
+| 2 | **Capsule vs Capsule** | Analytic: closest point on two line segments | **~1.2x** |
+| 3 | **Sphere vs Capsule** | Analytic: distance point to segment | **~1.1x** |
+| 4 | **Box vs Box** | Separating Axis Theorem (SAT), 15 axes | **~2x** |
+| 5 | **Box vs Sphere/Capsule** | SAT simplified | **~1.5x** |
+| 6 | **Convex Mesh vs Convex Mesh** | GJK + EPA iterative algorithms | **~4–6x** |
+| 7 | **Convex Mesh vs Triangle Mesh** | BVH traversal + per-triangle GJK | **~8–15x** |
+| 8 | **Triangle Mesh vs Triangle Mesh** | BVH-BVH traversal (FORBIDDEN for dynamics!) | **~20–50x** |
+
+### Rules for Dynamic Bodies
+* **Characters**: Use `PxCapsuleController` — 1 capsule shape replaces 8+ convex hulls.
+* **Projectiles**: Use `PxSphereGeometry` — fastest possible narrowphase.
+* **Vehicles**: Use compound of 3–5 boxes/capsules, never a convex hull of the entire car body.
+* **Ragdolls**: Use capsules for limbs, spheres for head — never per-bone convex meshes.
+* **Static Environment**: `PxTriangleMeshGeometry` is perfectly fine for static actors (BVH is built once).
+
+---
+
+## 🎨 Tone Mapping & 3D Color LUT on GPU (Single Texture Lookup)
+
+Procedural tone mapping operators (ACES, Reinhard, Filmic) execute complex math per fragment in the post-processing pipeline. For cinematic color grading (color correction, contrast curves, film emulation), these calculations are redundant — they produce the same output for the same input color.
+
+### 3D Color LUT: Replace Math with a Single Texture Fetch
+A 3D Color Look-Up Table encodes the entire color transformation as a pre-baked $32 \times 32 \times 32$ 3D texture. At runtime, the fragment shader replaces all tone mapping and color grading math with **1 trilinear 3D texture sample**:
+
+```typescript
+// 1. Load a 3D Color LUT texture (e.g. exported from DaVinci Resolve or Photoshop)
+const colorGrading = new ColorGradingTexture("/luts/cinematic_warm.3dl", scene);
+
+// 2. Apply to the rendering pipeline
+const pipeline = new DefaultRenderingPipeline("default", true, scene, [camera]);
+pipeline.imageProcessing.colorGradingEnabled = true;
+pipeline.imageProcessing.colorGradingTexture = colorGrading;
+
+// 3. Optionally combine with ACES tone mapping:
+pipeline.imageProcessing.toneMappingEnabled = true;
+pipeline.imageProcessing.toneMappingType = ImageProcessingConfiguration.TONEMAPPING_ACES;
+```
+* **Performance**: Replaces 20+ ALU operations per pixel with 1 trilinear 3D texture fetch (**~3x faster** on mobile GPUs with limited ALU throughput).
+
+---
+
+## ⚡ WebGPU Subgroup / Wavefront Intrinsics (Register-Level Data Exchange)
+
+Modern GPUs execute threads not individually but in groups called **warps** (NVIDIA: 32 threads), **wavefronts** (AMD: 32 or 64), or **SIMD groups** (Apple: 32).
+
+Traditionally, sharing data between threads within a workgroup requires writing to and reading from **Workgroup Shared Memory (LDS)** — a fast but latency-bound scratchpad (typically 48–64 KB per workgroup).
+
+### Bypassing Shared Memory via Subgroup Operations
+WebGPU subgroup operations exchange data directly between threads within a warp/wavefront through **hardware register shuffle**, completely bypassing LDS:
+
+```wgsl
+// WGSL Compute Shader with Subgroup intrinsics
+enable subgroups;
+
+@compute @workgroup_size(64)
+fn cs_reduce(@builtin(global_invocation_id) id: vec3u,
+             @builtin(subgroup_invocation_id) laneId: u32,
+             @builtin(subgroup_size) subgroupSize: u32) {
+  var value = inputBuffer[id.x];
+
+  // Sum all values across the 32/64 threads in this subgroup
+  // via hardware register shuffle — 0 shared memory writes!
+  let subgroupSum = subgroupAdd(value); // ~4x faster than shared memory reduction!
+
+  if (laneId == 0u) {
+    // Only lane 0 writes the partial sum
+    atomicAdd(&outputSum, subgroupSum);
+  }
+}
+```
+
+### Key Subgroup Operations (Chrome 133+, behind flag)
+| Operation | Description |
+| :--- | :--- |
+| `subgroupAdd(value)` | Sum across all threads in the subgroup |
+| `subgroupMin(value)` / `subgroupMax(value)` | Min/Max reduction |
+| `subgroupBallot(condition)` | Bitmask of threads where condition is `true` |
+| `subgroupBroadcast(value, laneId)` | Broadcast a single lane's value to all threads |
+| `subgroupShuffle(value, laneId)` | Read any lane's register value directly |
+
+* **Use Cases**: Particle culling, histogram computation, prefix sums, and draw indirect count.
+
+---
+
+## 🎯 PhysX `PxHitFlag::eMESH_ANY` for Early-Exit Raycasts
+
+Standard PhysX raycasts (`PxHitFlag::eDEFAULT`) traverse the entire BVH tree to find the **closest** intersection point — sorting all hits, computing normals, barycentric coordinates, and UV weights.
+
+For binary visibility queries (AI Line-of-Sight, shadow occlusion, "can I see the player?"), finding the closest hit is unnecessary. You only need to know: **"Is there ANY obstruction?"**
+
+### Early Exit on First Triangle Hit
+```cpp
+PxRaycastBuffer hitBuffer;
+bool isBlocked = pxScene->raycast(
+    origin, direction, maxDistance,
+    hitBuffer,
+    PxHitFlag::eMESH_ANY   // Stop BVH traversal at FIRST triangle intersection!
+);
+
+if (isBlocked) {
+    // Something is between the AI and the player — no line of sight
+}
+```
+* **Performance Gain**: **3x–5x faster** than `eDEFAULT` raycasts on complex triangle meshes, because PhysX immediately exits the BVH traversal at the first found intersection without testing remaining branches.
+* **Combine with `PxBatchQuery`**: Batching 200 early-exit visibility raycasts yields **10x–15x total speedup** over sequential closest-hit raycasts.
+
+---
+
 ## 🎯 Decals: Batching, Merging & Texture-Space DecalMaps
 
 Spawning traditional 3D decal meshes (`MeshBuilder.CreateDecal`) in games (bullet holes, footsteps, blood splatters, scorch marks) creates serious bottlenecks: each decal performs CPU polygon clipping against the target mesh, allocates a new `Mesh` node, creates separate VBOs, risks z-fighting flickering (`zOffset`), and introduces **1 extra draw call per decal** (100 bullet holes = 100 extra draw calls).
@@ -2480,6 +2596,10 @@ m1.multiplyToRef(m2, preallocatedMatrix);
 - **Don't encode all WebGPU render passes on the main thread in complex scenes** — record shadow and depth passes concurrently across Web Workers using `GPUCommandEncoder` and submit together in `device.queue.submit()`.
 - **Don't raymarch volumetric fog per-pixel in full resolution** — compute fog in a 3D Froxel Grid via Compute Shader or downsample the scattering post-process to 0.5x resolution to save 75% fillrate.
 - **Don't rely on Automatic Box Pruning (ABP) in streaming open-world scenes** — dynamic bounds resizing causes memory reallocation spikes; use Multi-Box Pruning (MBP) with fixed region grids.
+- **Don't use convex mesh or triangle mesh shapes on dynamic projectiles and characters** — use spheres and capsules (analytic $O(1)$ collision) for 4–6x faster narrowphase than iterative GJK/EPA.
+- **Don't compute tone mapping and color grading procedurally per pixel** — bake the entire color transformation into a $32^3$ 3D Color LUT texture and replace math with 1 trilinear sample.
+- **Don't use shared memory reductions in WebGPU compute shaders when subgroup intrinsics are available** — `subgroupAdd`/`subgroupBallot` exchange data via hardware register shuffle, bypassing LDS latency.
+- **Don't use `PxHitFlag::eDEFAULT` for binary visibility raycasts (AI LoS, shadow occlusion)** — use `PxHitFlag::eMESH_ANY` to exit BVH traversal on the first triangle hit (3–5x faster).
 
 ---
 
