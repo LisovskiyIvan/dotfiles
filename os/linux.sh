@@ -25,6 +25,9 @@ CONFIG_TARGETS=(
   # Herdr (only config — runtime files like *.sock/*.log stay local)
   "herdr/config.toml::${HOME}/.config/herdr/config.toml"
 
+  # Rex
+  "rex/init.lua::${HOME}/.config/rex/init.lua"
+
   # Agents (opencode/crush compatible)
   ".agents::${HOME}/.agents"
 
