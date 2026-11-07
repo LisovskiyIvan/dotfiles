@@ -42,6 +42,15 @@ When working with libraries, frameworks, or APIs — use Context7 MCP to fetch c
 3. Call `query-docs` with the selected library ID and the user's question
 4. Answer using the fetched docs — include code examples and cite the version
 
+## Browse (browser automation)
+
+Use browse MCP tools for all browser work. Session per task, route by task type:
+
+- Local dev tasks (localhost, dev servers, testing own builds) → Chrome session.
+- Personal/general tasks (reading, logged-in sites, research) → Helium session.
+
+Create sessions with `session_new({ browser: "<id>" })`; check `browse pair --list` for connected browser ids. On this Mac (Nov 2026): `chrome-mac` = Helium (personal), `chrome-mac-2` = Chrome (local dev). Ids assigned at pairing time — re-check the list if unsure.
+
 ## File search
 
 Use the fff MCP tools for all file search operations instead of default tools. If fff is not available, use rg or default tools.

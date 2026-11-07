@@ -15,6 +15,18 @@
       "type": "local",
       "command": ["fff-mcp"],
       "enabled": true
+    },
+    "servers": {
+      "browse": {
+        "type": "local",
+        "command": [
+          "/Users/ivan/.local/bin/browse",
+          "mcp"
+        ],
+        "environment": {
+          "OPENCODE_BROWSER_RUNTIME": "auto-update"
+        }
+      }
     }
   },
   "formatter": {
