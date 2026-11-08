@@ -50,3 +50,7 @@ mouse-scroll-multiplier = 0.95
 # Linux-специфичный оверрайд — подхватится только если файл существует
 # На Linux: ghostty/config.linux будет скопирован в ~/.config/ghostty/config.linux
 config-file = ?"~/.config/ghostty/config.linux"
+
+# >>> Scene: managed include. Remove this block to detach Scene. >>>
+config-file = ?"/Users/ivan/Library/Application Support/com.mitchellh.ghostty/scene.conf"
+# <<< Scene <<<

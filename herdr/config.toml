@@ -18,7 +18,7 @@ next_tab = ["prefix+n", "alt+l", "alt+д"]
 new_tab = ["prefix+c", "prefix+t"]
 
 [theme]
-name = "rose-pine"
+name = "catppuccin"
 auto_switch = false
 
 [ui.sound]
@@ -35,3 +35,23 @@ rows = [["state_icon", "machine", "workspace", "tab"], ["agent"]]
 [experimental]
 kitty_graphics = true
 switch_ascii_input_source_in_prefix = true
+
+[theme.custom]
+accent = "#7aa2f7"
+panel_bg = "#13141c"
+active_row_bg = "#1f2230"
+selection_bg = "#292e42"
+surface0 = "#24283b"
+surface1 = "#414868"
+surface_dim = "#1a1b26"
+overlay0 = "#565f89"
+overlay1 = "#6f78a0"
+text = "#a9b1d6"
+subtext0 = "#8c94bb"
+mauve = "#bb9af7"
+green = "#9ece6a"
+yellow = "#e0af68"
+red = "#f7768e"
+blue = "#7aa2f7"
+teal = "#449dab"
+peach = "#eb927b"

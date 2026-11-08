@@ -28,13 +28,8 @@ Mason (`mason-lspconfig` + `mason-tool-installer`) при первом запу�
 
   Без бинаря TS/JS останутся без LSP — ошибки не будет, сервер просто не включится.
 
-- **goose** — компилятор Goose, он же LSP (`goose lsp`).
-  Собрать по https://aardappel.github.io/goose/ и положить так, чтобы `stdlib/`
-  лежал рядом с бинарём (например `~/.local/opt/goose/goose` + `~/.local/opt/goose/stdlib`).
-  Конфиг сам ищет бинарь в `PATH`, `~/.local/opt/goose`, `~/.local/bin`,
-  `/opt/homebrew/bin`, `/usr/local/bin`. Проверка: `:GooseLSP`.
-
-  Для подсветки нужен tree-sitter-парсер из исходников goose:
+- **goose** — tree-sitter-парсер для подсветки (LSP-конфиг удалён).
+  Нужен чекаут https://github.com/aardappel/goose и сборка парсера:
 
   ```sh
   python3 ~/dev/myself/goose-src/tree-sitter/build.py
