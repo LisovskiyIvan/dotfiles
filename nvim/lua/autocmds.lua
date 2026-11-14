@@ -12,7 +12,6 @@ vim.filetype.add {
   extension = {
     gd = "gdscript",
     gdshader = "gdshader",
-    goose = "goose",
     tscn = "godot_scene",
     tres = "godot_resource",
     glsl = "glsl",

@@ -28,16 +28,6 @@ Mason (`mason-lspconfig` + `mason-tool-installer`) при первом запу�
 
   Без бинаря TS/JS останутся без LSP — ошибки не будет, сервер просто не включится.
 
-- **goose** — tree-sitter-парсер для подсветки (LSP-конфиг удалён).
-  Нужен чекаут https://github.com/aardappel/goose и сборка парсера:
-
-  ```sh
-  python3 ~/dev/myself/goose-src/tree-sitter/build.py
-  ```
-
-  Другой путь к `tree-sitter/` задаётся через `GOOSE_TREE_SITTER`.
-  Без парсера работает `syntax/goose.vim` (fallback).
-
 - **lazygit** — для `<leader>gg`, `lazygit.nvim`. `brew install lazygit`.
 
 - **oxfmt** — форматтер JS/TS (conform). `brew install oxfmt` или `bun add -g oxfmt`.
@@ -81,8 +71,6 @@ Mason (`mason-lspconfig` + `mason-tool-installer`) при первом запу�
 - `lua/config/remote_clipboard.lua` — модуль нигде не подключается (`require` отсутствует).
 - `queries/vim/highlights.scm` — 361 строка вендорных queries для vim-парсера,
   перекрывают runtime-версию и давно не обновлялись.
-- `syntax/goose.vim` — legacy fallback, дублирует `queries/goose/highlights.scm`;
-  нужен только пока нет собранного tree-sitter-парсера.
 - `snippets/typescript.json.bak` — бэкап-файл.
 - Мёртвый код: закомментированный блок `vtsls` в конце `lua/configs/lspconfig.lua`,
   `-- test new blink`, закомментированные `m`/`M` в `lua/mappings.lua`.

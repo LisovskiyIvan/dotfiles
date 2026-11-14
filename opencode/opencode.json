@@ -46,6 +46,7 @@
       ]
     }
   },
+  "plugins": ["opencode-antigravity-auth@2.1.2"],
   "provider": {},
   "agent": {
     "build": { "disable": false },

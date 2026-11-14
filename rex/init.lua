@@ -155,11 +155,17 @@ rex.action{
 }
 
 -- Direct (no prefix)
-rex.bind("alt+[KeyJ]", "client.tab.next")
-rex.bind("alt+[KeyK]", "client.tab.previous")
-rex.bind("alt+[KeyH]", "pane_nav_left")
-rex.bind("alt+[KeyL]", "pane_nav_right")
+rex.bind("ctrl+[KeyJ]", "client.tab.next")
+rex.bind("ctrl+[KeyK]", "client.tab.previous")
+rex.bind("ctrl+[KeyH]", "pane_nav_left")
+rex.bind("ctrl+[KeyL]", "pane_nav_right")
 rex.bind("alt+[KeyZ]", "pane.zoom")
+rex.bind("ctrl+[KeyW]", "pane.zoom")
+rex.bind("ctrl+[KeyM]", "pane.minimize_floating")
+rex.bind("ctrl+shift+[KeyM]", "pane.minimize_all_floating")
+rex.bind("ctrl+[KeyF]", "pane.float")
+rex.bind("ctrl+[KeyV]", "pane.split.right")
+rex.bind("ctrl+[KeyX]", "close_pane")
 
 -- Sessions / workspaces
 rex.bind(P .. "shift+[KeyN]", "session.new")
@@ -186,13 +192,8 @@ rex.bind(P .. "[KeyK]", "pane.focus.up")
 rex.bind(P .. "[KeyL]", "pane.focus.right")
 rex.bind(P .. "tab", "pane.focus_next")
 rex.bind(P .. "shift+tab", "pane.focus_previous")
-rex.bind(P .. "[KeyV]", "pane.split.right")
 rex.bind(P .. "-", "pane.split.down")
-rex.bind(P .. "[KeyX]", "close_pane")
 rex.bind(P .. "[KeyZ]", "pane.zoom")
-rex.bind(P .. "[KeyF]", "pane.float")
-rex.bind(P .. "[KeyM]", "pane.minimize_floating")
-rex.bind(P .. "shift+[KeyM]", "pane.minimize_all_floating")
 
 -- Resize mode
 rex.bind(P .. "[KeyR]", "client.mode.enter", { name = "resize" })

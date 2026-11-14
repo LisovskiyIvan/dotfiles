@@ -221,14 +221,10 @@ return {
         "odin",
         "c3",
         "v",
-        "goose",
         "glsl",
       },
       indent = { enable = true },
     },
-    config = function()
-      require("configs.treesitter-goose").register()
-    end,
     -- Ensure patch is applied even if plugin is lazy-loaded
     init = function()
       -- load patch early; the module itself also handles LazyLoad autocmd
