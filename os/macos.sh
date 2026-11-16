@@ -13,6 +13,8 @@ CONFIG_TARGETS=(
 
   # Rex
   "rex/init.lua::${HOME}/.config/rex/init.lua"
+  "rex/worktree.lua::${HOME}/.config/rex/worktree.lua"
+  "bin/wt::${HOME}/.local/bin/wt"
 
   ".gitconfig::${HOME}/.gitconfig"
   "git/config-mir1t::${HOME}/.config/git/config-mir1t"

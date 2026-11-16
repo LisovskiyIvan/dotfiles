@@ -252,3 +252,6 @@ rex.bind("resize/right", "pane.resize", { direction = "right" })
 rex.bind(P .. "[KeyB]", "client.sidebar.toggle")
 rex.bind(P .. "shift+[KeyR]", "client.config.reload")
 rex.bind(P .. "[KeyS]", "client.settings")
+
+-- Worktree plugin (Ctrl+A g -> prompt -> git worktree + Rex session)
+require("worktree")
