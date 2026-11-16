@@ -116,6 +116,46 @@ end
 rex.action{ name = "pane_nav_left", title = "Focus Pane Left", run = pane_nav("left") }
 rex.action{ name = "pane_nav_right", title = "Focus Pane Right", run = pane_nav("right") }
 
+-- Ctrl+H/L: inside nvim pass the key through, elsewhere navigate panes.
+local function foreground_name(ctx)
+  local ok, proc = pcall(rex.call, "com.superlogical.terminal.process", {
+    session_id = ctx.session_id,
+    block_id = ctx.block_id,
+  })
+  if not ok or not proc or not proc.foreground then return nil end
+  return proc.foreground.name
+end
+
+local function in_nvim(ctx)
+  local name = foreground_name(ctx)
+  return name == "nvim" or name == "vim" or name == "nvim.exe" or name == "vim.exe"
+end
+
+local function send_key(data)
+  return function(ctx)
+    local ok = pcall(rex.call, "com.superlogical.terminal.write", {
+      session_id = ctx.session_id,
+      block_id = ctx.block_id,
+      args = { data = data },
+    })
+    return ok
+  end
+end
+
+local function nav_or_key(dir, data)
+  local nav = pane_nav(dir)
+  local forward = send_key(data)
+  return function(ctx)
+    if ctx.session_id and ctx.block_id and in_nvim(ctx) then
+      return forward(ctx)
+    end
+    return nav(ctx)
+  end
+end
+
+rex.action{ name = "pane_nav_left_or_ctrl_h", title = "Focus Pane Left / Ctrl-H", run = nav_or_key("left", "\b") }
+rex.action{ name = "pane_nav_right_or_ctrl_l", title = "Focus Pane Right / Ctrl-L", run = nav_or_key("right", "\f") }
+
 -- Ctrl+A X: close pane; closing the last pane destroys the session.
 rex.action{
   name = "close_pane",
@@ -157,8 +197,10 @@ rex.action{
 -- Direct (no prefix)
 rex.bind("ctrl+[KeyJ]", "client.tab.next")
 rex.bind("ctrl+[KeyK]", "client.tab.previous")
-rex.bind("ctrl+[KeyH]", "pane_nav_left")
-rex.bind("ctrl+[KeyL]", "pane_nav_right")
+rex.bind("ctrl+[KeyH]", "pane_nav_left_or_ctrl_h")
+rex.bind("ctrl+[KeyL]", "pane_nav_right_or_ctrl_l")
+rex.bind("ctrl+shift+[KeyH]", "pane_nav_left")
+rex.bind("ctrl+shift+[KeyL]", "pane_nav_right")
 rex.bind("alt+[KeyZ]", "pane.zoom")
 rex.bind("ctrl+[KeyW]", "pane.zoom")
 rex.bind("ctrl+[KeyM]", "pane.minimize_floating")
