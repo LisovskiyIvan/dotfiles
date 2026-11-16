@@ -6,7 +6,7 @@ local WT = os.getenv("HOME") .. "/.local/bin/wt"
 rex.action{
   name  = "worktree_new",
   title = "New Worktree",
-  description = "Ask for a name, create a git worktree and open it as a Rex session",
+  description = "Ask for a name, create a git worktree and open it as a tab",
   category = "Worktree",
   run = function(ctx)
     if not ctx.session_id then return false end

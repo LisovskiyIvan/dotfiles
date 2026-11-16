@@ -19,8 +19,8 @@ usage() {
 wt — git worktree + Rex helper
 
 usage:
-  wt new NAME        create worktree + branch NAME, open Rex session
-  wt delete NAME     remove worktree, branch and Rex session
+  wt new NAME        create worktree + branch NAME, open tab in current session
+  wt delete NAME     remove worktree, branch and its tab
   wt list            list worktrees
   wt prompt          interactive prompt (used by Rex hotkey)
 EOF
@@ -32,29 +32,27 @@ valid_name() { [[ "$1" =~ ^[a-zA-Z0-9][a-zA-Z0-9._-]*$ ]]; }
 
 branch_exists() { git -C "$MAIN_REPO" show-ref --verify --quiet "refs/heads/$1"; }
 
-select_session() {
-  local sid="$1" cid
-  [ "${WT_NO_SELECT:-0}" = "1" ] && return 0
-  cid=$(rex client ls --json 2>/dev/null |
-    jq -r '.clients[]? | select(.info.kind == "app") | .client_id' 2>/dev/null | head -n 1)
-  [ -n "$cid" ] || return 0
-  rex -C "$cid" do session.select "session_id=$sid" >/dev/null 2>&1 || true
-}
-
-# Sessions with any pane's cwd inside DIR (works even if label was renamed).
-session_ids_for_dir() {
-  local dir="$1" sid bid proc cwd
+# Tabs to close: label match or any pane's cwd inside DIR.
+# Prints "session_id window_id" lines.
+window_targets() {
+  local dir="$1" name="$2" sid view w b proc cwd
   rex ls --json 2>/dev/null | jq -r '.sessions[]?.session_id' 2>/dev/null | while IFS= read -r sid; do
     [ -n "$sid" ] || continue
-    rex session inspect "$sid" --json 2>/dev/null |
-      jq -r '.windows[]?.layers[]?.blocks[]?.block_id' 2>/dev/null |
-      while IFS= read -r bid; do
-        [ -n "$bid" ] || continue
-        proc=$(rex block call -s "$sid" -b "$bid" process 2>/dev/null || true)
+    view=$(rex session inspect "$sid" --json 2>/dev/null || true)
+
+    printf '%s' "$view" | jq -r --arg n "$name" '.windows[]? | select(.label == $n) | .window_id' 2>/dev/null |
+      while IFS= read -r w; do
+        [ -n "$w" ] && printf '%s %s\n' "$sid" "$w"
+      done
+
+    printf '%s' "$view" | jq -r '.windows[] | .window_id as $w | .layers[]?.blocks[]?.block_id | "\($w) \(.)"' 2>/dev/null |
+      while read -r w b; do
+        [ -n "$w" ] && [ -n "$b" ] || continue
+        proc=$(rex block call -s "$sid" -b "$b" process 2>/dev/null || true)
         printf '%s' "$proc" | jq -r '.. | objects | .cwd? // empty' 2>/dev/null |
           while IFS= read -r cwd; do
             case "$cwd" in
-              "$dir"|"$dir"/*) printf '%s\n' "$sid" ;;
+              "$dir"|"$dir"/*) printf '%s %s\n' "$sid" "$w" ;;
             esac
           done
       done
@@ -62,7 +60,7 @@ session_ids_for_dir() {
 }
 
 cmd_new() {
-  local name="${1:-}" dir out sid
+  local name="${1:-}" dir out id
   [ -n "$name" ] || { usage >&2; exit 2; }
   valid_name "$name" || die "bad name (letters, digits, . _ - only): $name"
   [ -n "$REPO" ] && [ -d "$REPO/.git" ] || die "not in a git repo (cd into one or set WT_REPO)"
@@ -74,22 +72,29 @@ cmd_new() {
   mkdir -p "$ROOT"
   git -C "$REPO" worktree add -b "$name" "$dir" >&2
 
-  sid=""
-  out=$(rex new "$name" -c "$dir" --json 2>/dev/null || true)
-  if [ -n "$out" ]; then
-    sid=$(printf '%s' "$out" | jq -r '.session_id // empty' 2>/dev/null || true)
+  out=""
+  if [ -n "${REX_SESSION:-}" ]; then
+    # New tab in the current session.
+    out=$(rex window new -s "$REX_SESSION" "$name" -c "$dir" --json 2>/dev/null || true)
+    if [ -n "$out" ]; then
+      id=$(printf '%s' "$out" | jq -r '.window_id // empty' 2>/dev/null || true)
+      [ -z "$id" ] || rex focus -s "$REX_SESSION" "$id" >/dev/null 2>&1 || true
+    fi
+  else
+    # Plain shell: no current session, fall back to a new one.
+    out=$(rex new "$name" -c "$dir" --json 2>/dev/null || true)
   fi
-  [ -z "$sid" ] || select_session "$sid"
 
   printf 'created %s -> %s\n' "$name" "$dir"
 }
 
 cmd_delete() {
-  local name="${1:-}" dir sid self keep=""
+  local name="${1:-}" dir dir_phys sid w own_s="${REX_SESSION:-}" own_w="" count defer_s="" defer_w=""
   [ -n "$name" ] || { usage >&2; exit 2; }
   valid_name "$name" || die "bad name: $name"
 
   dir="$ROOT/$name"
+  dir_phys=$(cd "$dir" 2>/dev/null && pwd -P || printf '%s' "$dir")
   if [ -d "$dir" ]; then
     git -C "$MAIN_REPO" worktree unlock "$dir" >/dev/null 2>&1 || true
     git -C "$MAIN_REPO" worktree remove --force "$dir" >&2 || rm -rf "$dir"
@@ -101,29 +106,26 @@ cmd_delete() {
     git -C "$MAIN_REPO" branch -D "$name" >/dev/null 2>&1
   fi
 
-  # Close by label and by location. Includes the session the command runs in.
-  local targets
-  targets=$({
-    rex ls --json 2>/dev/null |
-      jq -r --arg n "$name" '.sessions[]? | select(.label == $n) | .session_id' 2>/dev/null || true
-    session_ids_for_dir "$dir"
-  } | sort -u)
+  if [ -n "$own_s" ] && [ -n "${REX_BLOCK:-}" ]; then
+    own_w=$(rex block inspect "$REX_BLOCK" --json 2>/dev/null | jq -r '.block.window_id // empty' 2>/dev/null || true)
+  fi
 
-  self="${REX_SESSION:-}"
-  for sid in $targets; do
-    [ -n "$sid" ] || continue
-    if [ -n "$self" ] && [ "$sid" = "$self" ]; then
-      keep="$sid"
+  while read -r sid w; do
+    [ -n "$sid" ] && [ -n "$w" ] || continue
+    count=$(rex session inspect "$sid" --json 2>/dev/null | jq '.windows | length' 2>/dev/null || echo 0)
+    [ "$count" -gt 1 ] || continue
+    if [ "$sid" = "$own_s" ] && [ "$w" = "$own_w" ]; then
+      defer_s="$sid"; defer_w="$w"
       continue
     fi
-    rex kill "$sid" >/dev/null 2>&1 || true
-  done
+    rex window close -s "$sid" "$w" >/dev/null 2>&1 || true
+  done < <(window_targets "$dir_phys" "$name" | sort -u)
 
   printf 'deleted %s\n' "$name"
 
-  # Own session last, detached, so this command can finish first.
-  if [ -n "$keep" ]; then
-    (nohup rex kill "$keep" >/dev/null 2>&1 &)
+  # Own tab last, detached, so this command can finish first.
+  if [ -n "$defer_s" ] && [ -n "$defer_w" ]; then
+    (nohup rex window close -s "$defer_s" "$defer_w" >/dev/null 2>&1 &)
   fi
 }
 
