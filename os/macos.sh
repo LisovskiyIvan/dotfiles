@@ -13,6 +13,7 @@ CONFIG_TARGETS=(
 
   # Rex
   "rex/init.lua::${HOME}/.config/rex/init.lua"
+
   ".gitconfig::${HOME}/.gitconfig"
   "git/config-mir1t::${HOME}/.config/git/config-mir1t"
   "git/hooks/post-checkout::/Users/ivan/dev/work/new.editor.mir.1t.ru/.githooks/post-checkout"
