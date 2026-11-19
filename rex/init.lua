@@ -208,6 +208,7 @@ rex.bind("ctrl+shift+[KeyM]", "pane.minimize_all_floating")
 rex.bind("ctrl+[KeyF]", "pane.float")
 rex.bind("ctrl+[KeyV]", "pane.split.right")
 rex.bind("ctrl+[KeyX]", "close_pane")
+rex.bind("ctrl+[KeyD]", "close_pane")
 
 -- Sessions / workspaces
 rex.bind(P .. "shift+[KeyN]", "session.new")
