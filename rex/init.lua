@@ -256,4 +256,3 @@ rex.bind(P .. "[KeyS]", "client.settings")
 -- Worktree plugin (Ctrl+A g -> prompt -> git worktree + Rex session)
 require("worktree")
 
-require("rexweb").setup{}
