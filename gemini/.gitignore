@@ -1,0 +1,27 @@
+# Machine-local runtime state, conversations, caches, auth
+antigravity/
+antigravity-cli/annotations/
+antigravity-cli/bin/
+antigravity-cli/brain/
+antigravity-cli/builtin/
+antigravity-cli/cache/
+antigravity-cli/conversations/
+antigravity-cli/crashes/
+antigravity-cli/implicit/
+antigravity-cli/knowledge/
+antigravity-cli/log/
+antigravity-cli/presence/
+antigravity-cli/updater/
+antigravity-cli/*.db
+antigravity-cli/*.db-shm
+antigravity-cli/*.db-wal
+antigravity-cli/*.pb
+antigravity-cli/*.pbtxt
+antigravity-cli/cli.log
+antigravity-cli/history.jsonl
+antigravity-cli/installation_id
+antigravity-cli/last_check.timestamp
+config/projects/
+config/sidecars/
+config/plugins/
+config/.migrated
