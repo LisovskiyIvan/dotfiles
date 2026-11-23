@@ -20,6 +20,8 @@ wt — git worktree + Rex helper
 
 usage:
   wt new NAME        create worktree + branch NAME, open tab in current session
+                     NAME may contain slashes: hotfix/smh -> branch hotfix/smh,
+                     folder hotfix-smh
   wt delete NAME     remove worktree, branch and its tab
   wt list            list worktrees
   wt prompt          interactive prompt (used by Rex hotkey)
@@ -28,7 +30,20 @@ EOF
 
 die() { printf 'wt: %s\n' "$*" >&2; exit 1; }
 
-valid_name() { [[ "$1" =~ ^[a-zA-Z0-9][a-zA-Z0-9._-]*$ ]]; }
+# Branch-style names: hotfix/smh, feature/foo-bar. Each segment alnum-first.
+valid_name() {
+  local n="$1" seg
+  [[ "$n" =~ ^[a-zA-Z0-9][a-zA-Z0-9._/-]*$ ]] || return 1
+  [[ "$n" != *'//'* && "$n" != */ && "$n" != *..* && "$n" != *. ]] || return 1
+  local IFS=/
+  for seg in $n; do
+    [[ "$seg" =~ ^[a-zA-Z0-9][a-zA-Z0-9._-]*$ ]] || return 1
+  done
+  return 0
+}
+
+# Folder name: hotfix/smh -> hotfix-smh.
+slug_name() { printf '%s' "$1" | tr '/' '-'; }
 
 branch_exists() { git -C "$MAIN_REPO" show-ref --verify --quiet "refs/heads/$1"; }
 
@@ -60,12 +75,14 @@ window_targets() {
 }
 
 cmd_new() {
-  local name="${1:-}" dir out id
+  local name="${1:-}" slug dir out id
   [ -n "$name" ] || { usage >&2; exit 2; }
-  valid_name "$name" || die "bad name (letters, digits, . _ - only): $name"
+  valid_name "$name" || die "bad name (letters, digits, . _ - / only): $name"
   [ -n "$REPO" ] && [ -d "$REPO/.git" ] || die "not in a git repo (cd into one or set WT_REPO)"
+  git check-ref-format "refs/heads/$name" >/dev/null 2>&1 || die "invalid branch name: $name"
 
-  dir="$ROOT/$name"
+  slug=$(slug_name "$name")
+  dir="$ROOT/$slug"
   [ ! -e "$dir" ] || die "already exists: $dir"
   branch_exists "$name" && die "branch already exists: $name"
 
@@ -89,12 +106,20 @@ cmd_new() {
 }
 
 cmd_delete() {
-  local name="${1:-}" dir dir_phys sid w own_s="${REX_SESSION:-}" own_w="" count defer_s="" defer_w=""
+  local name="${1:-}" slug branch dir dir_phys sid w own_s="${REX_SESSION:-}" own_w="" count defer_s="" defer_w=""
   [ -n "$name" ] || { usage >&2; exit 2; }
   valid_name "$name" || die "bad name: $name"
 
-  dir="$ROOT/$name"
+  slug=$(slug_name "$name")
+  dir="$ROOT/$slug"
   dir_phys=$(cd "$dir" 2>/dev/null && pwd -P || printf '%s' "$dir")
+
+  # Accept either form: branch (hotfix/smh) or folder (hotfix-smh).
+  branch="$name"
+  if ! branch_exists "$branch" && [ -d "$dir" ]; then
+    branch=$(git -C "$dir" symbolic-ref --short -q HEAD 2>/dev/null || printf '%s' "$name")
+  fi
+
   if [ -d "$dir" ]; then
     git -C "$MAIN_REPO" worktree unlock "$dir" >/dev/null 2>&1 || true
     git -C "$MAIN_REPO" worktree remove --force "$dir" >&2 || rm -rf "$dir"
@@ -102,8 +127,8 @@ cmd_delete() {
     git -C "$MAIN_REPO" worktree prune >/dev/null 2>&1 || true
   fi
 
-  if branch_exists "$name"; then
-    git -C "$MAIN_REPO" branch -D "$name" >/dev/null 2>&1
+  if branch_exists "$branch"; then
+    git -C "$MAIN_REPO" branch -D "$branch" >/dev/null 2>&1
   fi
 
   if [ -n "$own_s" ] && [ -n "${REX_BLOCK:-}" ]; then
@@ -119,7 +144,7 @@ cmd_delete() {
       continue
     fi
     rex window close -s "$sid" "$w" >/dev/null 2>&1 || true
-  done < <(window_targets "$dir_phys" "$name" | sort -u)
+  done < <(window_targets "$dir_phys" "$branch" | sort -u)
 
   printf 'deleted %s\n' "$name"
 

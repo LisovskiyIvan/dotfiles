@@ -131,6 +131,11 @@ local function in_nvim(ctx)
   return name == "nvim" or name == "vim" or name == "nvim.exe" or name == "vim.exe"
 end
 
+local function in_opencode(ctx)
+  local name = foreground_name(ctx)
+  return name == "opencode" or name == "opencode.exe"
+end
+
 local function send_key(data)
   return function(ctx)
     local ok = pcall(rex.call, "com.superlogical.terminal.write", {
@@ -155,6 +160,17 @@ end
 
 rex.action{ name = "pane_nav_left_or_ctrl_h", title = "Focus Pane Left / Ctrl-H", run = nav_or_key("left", "\b") }
 rex.action{ name = "pane_nav_right_or_ctrl_l", title = "Focus Pane Right / Ctrl-L", run = nav_or_key("right", "\f") }
+
+-- Ctrl+F: inside opencode pass the key through, elsewhere float the pane.
+local function float_or_key(ctx)
+  if ctx.session_id and ctx.block_id and in_opencode(ctx) then
+    return send_key("\006")(ctx)
+  end
+  rex.client.queue("pane.float")
+  return true
+end
+
+rex.action{ name = "pane_float_or_ctrl_f", title = "Float Pane / Ctrl-F", run = float_or_key }
 
 -- Ctrl+A X: close pane; closing the last pane destroys the session.
 rex.action{
@@ -205,7 +221,7 @@ rex.bind("alt+[KeyZ]", "pane.zoom")
 rex.bind("ctrl+[KeyW]", "pane.zoom")
 rex.bind("ctrl+[KeyM]", "pane.minimize_floating")
 rex.bind("ctrl+shift+[KeyM]", "pane.minimize_all_floating")
-rex.bind("ctrl+[KeyF]", "pane.float")
+rex.bind("ctrl+[KeyF]", "pane_float_or_ctrl_f")
 rex.bind("ctrl+[KeyV]", "pane.split.right")
 rex.bind("ctrl+[KeyX]", "close_pane")
 
