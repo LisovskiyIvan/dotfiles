@@ -45,6 +45,15 @@ valid_name() {
 # Folder name: hotfix/smh -> hotfix-smh.
 slug_name() { printf '%s' "$1" | tr '/' '-'; }
 
+# Session holding our own pane: REX_SESSION if set, else look it up from REX_BLOCK.
+own_session() {
+  local s="${REX_SESSION:-}"
+  if [ -z "$s" ] && [ -n "${REX_BLOCK:-}" ]; then
+    s=$(rex block inspect "$REX_BLOCK" --json 2>/dev/null | jq -r '.session_id // empty' 2>/dev/null || true)
+  fi
+  printf '%s' "$s"
+}
+
 branch_exists() { git -C "$MAIN_REPO" show-ref --verify --quiet "refs/heads/$1"; }
 
 # Tabs to close: label match or any pane's cwd inside DIR.
@@ -75,7 +84,7 @@ window_targets() {
 }
 
 cmd_new() {
-  local name="${1:-}" slug dir out id
+  local name="${1:-}" slug dir out id sid
   [ -n "$name" ] || { usage >&2; exit 2; }
   valid_name "$name" || die "bad name (letters, digits, . _ - / only): $name"
   [ -n "$REPO" ] && [ -d "$REPO/.git" ] || die "not in a git repo (cd into one or set WT_REPO)"
@@ -90,15 +99,16 @@ cmd_new() {
   git -C "$REPO" worktree add -b "$name" "$dir" >&2
 
   out=""
-  if [ -n "${REX_SESSION:-}" ]; then
+  sid=$(own_session)
+  if [ -n "$sid" ]; then
     # New tab in the current session.
-    out=$(rex window new -s "$REX_SESSION" "$name" -c "$dir" --json 2>/dev/null || true)
+    out=$(rex window new -s "$sid" "$name" -c "$dir" --json 2>/dev/null || true)
     if [ -n "$out" ]; then
       id=$(printf '%s' "$out" | jq -r '.window_id // empty' 2>/dev/null || true)
-      [ -z "$id" ] || rex focus -s "$REX_SESSION" "$id" >/dev/null 2>&1 || true
+      [ -z "$id" ] || rex focus -s "$sid" "$id" >/dev/null 2>&1 || true
     fi
   else
-    # Plain shell: no current session, fall back to a new one.
+    # No parent session: fall back to a new one.
     out=$(rex new "$name" -c "$dir" --json 2>/dev/null || true)
   fi
 
@@ -106,8 +116,9 @@ cmd_new() {
 }
 
 cmd_delete() {
-  local name="${1:-}" slug branch dir dir_phys sid w own_s="${REX_SESSION:-}" own_w="" count defer_s="" defer_w=""
+  local name="${1:-}" slug branch dir dir_phys sid w own_s own_w="" count defer_s="" defer_w=""
   [ -n "$name" ] || { usage >&2; exit 2; }
+  own_s=$(own_session)
   valid_name "$name" || die "bad name: $name"
 
   slug=$(slug_name "$name")
