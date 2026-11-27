@@ -15,6 +15,7 @@ CONFIG_TARGETS=(
   "rex/init.lua::${HOME}/.config/rex/init.lua"
   "rex/worktree.lua::${HOME}/.config/rex/worktree.lua"
   "bin/wt::${HOME}/.local/bin/wt"
+  "bin/nvim-nav::${HOME}/.local/bin/nvim-nav"
 
   ".gitconfig::${HOME}/.gitconfig"
   "git/config-mir1t::${HOME}/.config/git/config-mir1t"

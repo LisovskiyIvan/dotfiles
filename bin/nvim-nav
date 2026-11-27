@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Ctrl-H/L in Neovim: pass the key through; elsewhere switch Herdr tabs.
+# Usage: nvim-nav left|right
+set -euo pipefail
+
+dir=${1:?usage: nvim-nav left|right}
+case "$dir" in
+  left)  key=ctrl+h ;;
+  right) key=ctrl+l ;;
+  *) echo "nvim-nav: bad direction: $dir" >&2; exit 2 ;;
+esac
+
+bin=${HERDR_BIN_PATH:-herdr}
+pane=${HERDR_ACTIVE_PANE_ID:?missing HERDR_ACTIVE_PANE_ID}
+tab=${HERDR_ACTIVE_TAB_ID:?missing HERDR_ACTIVE_TAB_ID}
+ws=${HERDR_ACTIVE_WORKSPACE_ID:?missing HERDR_ACTIVE_WORKSPACE_ID}
+
+procs=$("$bin" pane process-info --pane "$pane" 2>/dev/null || true)
+if printf '%s' "$procs" | jq -e '
+  [.result.process_info.foreground_processes[]? | (.name // ""), (.argv0 // "")]
+  | any(test("^(nvim|vim)(\\.exe)?$"))
+' >/dev/null 2>&1; then
+  "$bin" pane send-keys "$pane" "$key" >/dev/null 2>&1
+  exit 0
+fi
+
+tabs=$("$bin" tab list --workspace "$ws" 2>/dev/null || true)
+target=$(printf '%s' "$tabs" | jq -r --arg tab "$tab" --arg dir "$dir" '
+  .result.tabs as $tabs
+  | ($tabs | map(.tab_id) | index($tab)) as $i
+  | if $i == null or ($tabs | length) < 2 then empty
+    elif $dir == "left" then
+      $tabs[if $i == 0 then ($tabs | length) - 1 else $i - 1 end].tab_id
+    else
+      $tabs[if $i == ($tabs | length) - 1 then 0 else $i + 1 end].tab_id
+    end
+' 2>/dev/null || true)
+
+if [ -n "$target" ]; then
+  "$bin" tab focus "$target" >/dev/null 2>&1
+fi

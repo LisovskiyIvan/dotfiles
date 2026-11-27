@@ -17,16 +17,15 @@ rename_workspace = "prefix+shift+w"
 close_workspace = "prefix+shift+d"
 
 # Tabs (Rex: prefix+t/c, prefix+n/p, prefix+shift+t/x, prefix+1..9)
-# Ctrl+h/l and Alt+h/l = left/right (Latin + Cyrillic for Russian layout)
-previous_tab = ["prefix+p", "alt+h", "alt+р", "ctrl+h", "ctrl+р"]
-next_tab = ["prefix+n", "alt+l", "alt+д", "ctrl+l", "ctrl+д"]
+# Ctrl+Shift+h/l and Alt+h/l = left/right (Latin + Cyrillic for Russian layout)
+previous_tab = ["prefix+p", "alt+h", "alt+р", "ctrl+shift+h", "ctrl+shift+р", "ctrl+shift+Р"]
+next_tab = ["prefix+n", "alt+l", "alt+д", "ctrl+shift+l", "ctrl+shift+д", "ctrl+shift+Д"]
 new_tab = ["prefix+c", "prefix+t"]
 rename_tab = "prefix+shift+t"
 close_tab = "prefix+shift+x"
 switch_tab = "prefix+1..9"
 
-# Panes: prefix+h/j/k/l moves between real splits. Ctrl+h/l switch tabs above,
-# Ctrl+j/k switch workspaces.
+# Panes: prefix+h/j/k/l moves between real splits. Ctrl+j/k switch workspaces.
 focus_pane_left = ["prefix+h"]
 focus_pane_down = ["prefix+j"]
 focus_pane_up = ["prefix+k"]
@@ -43,6 +42,19 @@ resize_mode = "prefix+r"
 toggle_sidebar = "prefix+b"
 reload_config = "prefix+shift+r"
 settings = "prefix+s"
+
+# Ctrl+h/l: Neovim keeps the key; elsewhere switch tabs (like Rex).
+[[keys.command]]
+key = ["ctrl+h", "ctrl+р"]
+type = "shell"
+command = "nvim-nav left"
+description = "Neovim keeps Ctrl-H; otherwise previous tab"
+
+[[keys.command]]
+key = ["ctrl+l", "ctrl+д"]
+type = "shell"
+command = "nvim-nav right"
+description = "Neovim keeps Ctrl-L; otherwise next tab"
 
 [theme]
 name = "catppuccin"
