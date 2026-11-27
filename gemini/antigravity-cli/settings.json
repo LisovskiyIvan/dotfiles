@@ -48,7 +48,8 @@
     "/Users/ivan/dev/myself/dotfiles/rex/worktree/perf/src/player",
     "/Users/ivan/.config/rex/worktree/hotfix-smoke/src/player",
     "/Users/ivan/dev/myself/dotfiles/rex/worktree/hotfix-smoke/src/player",
-    "/Users/ivan/dev/myself/dotfiles/rex/worktree/feature-new-shooter-ui/src/player"
+    "/Users/ivan/dev/myself/dotfiles/rex/worktree/feature-new-shooter-ui/src/player",
+    "/Users/ivan/.config/rex/worktree/hotfix-shooter-ui/src/player"
   ],
   "verbosity": "high"
 }
