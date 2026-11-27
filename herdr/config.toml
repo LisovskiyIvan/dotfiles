@@ -6,16 +6,43 @@ show_agent_labels_on_pane_borders = false
 status_indicators = "dots"
 [keys]
 prefix = "ctrl+a"
-# Workspaces: Alt+j/k = down/up (Latin + Cyrillic for Russian layout)
-next_workspace = ["alt+j", "alt+о"]
-previous_workspace = ["alt+k", "alt+л"]
-# New workspace: prefix+w (picker moved to prefix+u)
+
+# Workspaces (Rex: session.new/switch/rename/close)
+# Ctrl+j/k = down/up, Alt+j/k kept as fallback (Latin + Cyrillic for Russian layout)
+next_workspace = ["alt+j", "alt+о", "ctrl+j", "ctrl+о"]
+previous_workspace = ["alt+k", "alt+л", "ctrl+k", "ctrl+л"]
 new_workspace = ["prefix+shift+n", "prefix+w"]
 workspace_picker = "prefix+u"
-# Tabs: Alt+h/l = left/right; new tab = prefix+t (Latin + Cyrillic for Russian layout)
-previous_tab = ["prefix+p", "alt+h", "alt+р"]
-next_tab = ["prefix+n", "alt+l", "alt+д"]
+rename_workspace = "prefix+shift+w"
+close_workspace = "prefix+shift+d"
+
+# Tabs (Rex: prefix+t/c, prefix+n/p, prefix+shift+t/x, prefix+1..9)
+# Ctrl+h/l and Alt+h/l = left/right (Latin + Cyrillic for Russian layout)
+previous_tab = ["prefix+p", "alt+h", "alt+р", "ctrl+h", "ctrl+р"]
+next_tab = ["prefix+n", "alt+l", "alt+д", "ctrl+l", "ctrl+д"]
 new_tab = ["prefix+c", "prefix+t"]
+rename_tab = "prefix+shift+t"
+close_tab = "prefix+shift+x"
+switch_tab = "prefix+1..9"
+
+# Panes: prefix+h/j/k/l moves between real splits. Ctrl+h/l switch tabs above,
+# Ctrl+j/k switch workspaces.
+focus_pane_left = ["prefix+h"]
+focus_pane_down = ["prefix+j"]
+focus_pane_up = ["prefix+k"]
+focus_pane_right = ["prefix+l"]
+cycle_pane_next = "prefix+tab"
+cycle_pane_previous = "prefix+shift+tab"
+split_vertical = ["prefix+v", "ctrl+v"]
+split_horizontal = "prefix+minus"
+close_pane = ["prefix+x", "ctrl+x"]
+zoom = ["prefix+z", "alt+z", "ctrl+w"]
+resize_mode = "prefix+r"
+
+# Other (Rex)
+toggle_sidebar = "prefix+b"
+reload_config = "prefix+shift+r"
+settings = "prefix+s"
 
 [theme]
 name = "catppuccin"
