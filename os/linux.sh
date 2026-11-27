@@ -11,9 +11,6 @@ CONFIG_TARGETS=(
   # Lazygit
   "lazygit/config.yml::${HOME}/.config/lazygit/config.yml"
 
-  # Tmux
-  "tmux/tmux.conf::${HOME}/.config/tmux/tmux.conf"
-
   # Hyprland
   # "hypr::${HOME}/.config/hypr"
 

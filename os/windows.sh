@@ -16,6 +16,5 @@ CONFIG_TARGETS=(
   "zed/keymap.json::${app_data}/Zed/keymap.json"
   "zed/snippets::${app_data}/Zed/snippets"
   "zed/themes::${app_data}/Zed/themes"
-  ".wezterm.lua::${user_home}/.wezterm.lua"
   ".zshrc::${user_home}/.zshrc"
 )
