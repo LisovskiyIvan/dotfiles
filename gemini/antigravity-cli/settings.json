@@ -1,7 +1,7 @@
 {
   "agentMode": "accept-edits",
   "artifactReviewPolicy": "always-proceed",
-  "model": "Gemini 4 Neon (XHigh)",
+  "model": "Orchestrator (Neon)",
   "permissions": {
     "allow": [
       "command(bun run build)"
@@ -45,7 +45,10 @@
     "/Users/ivan/dev/myself/LisovskiyIvan",
     "/Users/ivan/dev/myself/assetty",
     "/Users/ivan/dev/myself/onet/pp",
-    "/Users/ivan/dev/myself/dotfiles/rex/worktree/perf/src/player"
+    "/Users/ivan/dev/myself/dotfiles/rex/worktree/perf/src/player",
+    "/Users/ivan/.config/rex/worktree/hotfix-smoke/src/player",
+    "/Users/ivan/dev/myself/dotfiles/rex/worktree/hotfix-smoke/src/player",
+    "/Users/ivan/dev/myself/dotfiles/rex/worktree/feature-new-shooter-ui/src/player"
   ],
   "verbosity": "high"
 }
