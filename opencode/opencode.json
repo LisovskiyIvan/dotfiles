@@ -3,29 +3,26 @@
   "theme": "system",
   "autoupdate": true,
   "mcp": {
-    "context7": {
-      "type": "remote",
-      "url": "https://mcp.context7.com/mcp",
-      "enabled": true,
-      "headers": {
-        "CONTEXT7_API_KEY": "{env:CONTEXT7_API_KEY}"
-      }
-    },
-    "fff": {
-      "type": "local",
-      "command": ["fff-mcp"],
-      "enabled": true
-    },
     "servers": {
       "browse": {
         "type": "local",
         "command": [
-          "/Users/ivan/.local/bin/browse",
+          "/home/dayme/.local/bin/browse",
           "mcp"
         ],
+        "cwd": "/home/dayme",
+        "pool": true,
         "environment": {
           "OPENCODE_BROWSER_RUNTIME": "auto-update"
         }
+      },
+      "fff": {
+        "type": "local",
+        "command": ["fff-mcp"]
+      },
+      "context7": {
+        "type": "remote",
+        "url": "https://mcp.context7.com/mcp"
       }
     }
   },
@@ -47,9 +44,9 @@
     }
   },
   "provider": {},
-  "agent": {
-    "build": { "disable": false },
-    "plan": { "disable": true },
+  "agents": {
+    "build": { "disabled": false },
+    "plan": { "disabled": true },
     "general": { "model": "opencode-go/hy4-flash-free" },
     "explore": { "model": "opencode-go/hy4-flash-free" },
     "scout": { "model": "opencode-go/hy4-flash-free" }
