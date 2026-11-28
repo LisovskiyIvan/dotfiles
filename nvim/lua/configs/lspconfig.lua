@@ -48,11 +48,8 @@ vim.lsp.config("vue_ls", {
   },
 })
 
-vim.lsp.config("gopls", {
-  on_attach = nvlsp.on_attach,
-  on_init = nvlsp.on_init,
-  capabilities = capabilities,
-})
+-- gopls намеренно отключён (см. lua/plugins/go.lua и mason ensure_installed).
+pcall(vim.lsp.enable, "gopls", false)
 
 vim.lsp.config("rust_analyzer", {
   on_attach = nvlsp.on_attach,
@@ -209,7 +206,6 @@ vim.lsp.config("v_analyzer", {
 
 for _, server in ipairs {
   "vue_ls",
-  "gopls",
   "rust_analyzer",
   "pyright",
   "clangd",

@@ -8,10 +8,8 @@ return {
   ft = "go",
   build = ':lua require("go.install").update_all_sync()',
   opts = {
-    lsp_cfg = true,
-    lsp_gofumpt = true,
-    lsp_on_attach = true,
-    lsp_keymaps = false,
+    -- gopls отключён намеренно; go.nvim остаётся для run/test/lint.
+    lsp_cfg = false,
     diagnostic = true,
     dap_debug = false,
     test_runner = "go",

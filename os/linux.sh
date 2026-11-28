@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
 
 CONFIG_TARGETS=(
+  # Neovim
+  "nvim::${HOME}/.config/nvim"
+
   # Shell
   ".bashrc::${HOME}/.bashrc"
+
+  # Bin
+  "bin/wt::${HOME}/.local/bin/wt"
+  "bin/nvim-nav::${HOME}/.local/bin/nvim-nav"
 
   # Git
   ".gitconfig::${HOME}/.gitconfig"
@@ -19,6 +26,10 @@ CONFIG_TARGETS=(
   # Ghostty
   "ghostty::${HOME}/.config/ghostty"
 
+  # Chromium (render on the NVIDIA dGPU through XWayland)
+  "chromium/chromium-flags.conf::${HOME}/.config/chromium-flags.conf"
+  "chromium/environment.d.conf::${HOME}/.config/environment.d/90-nvidia-glx.conf"
+
   # Herdr (only config — runtime files like *.sock/*.log stay local)
   "herdr/config.toml::${HOME}/.config/herdr/config.toml"
 
@@ -27,6 +38,13 @@ CONFIG_TARGETS=(
 
   # Agents (opencode/crush compatible)
   ".agents::${HOME}/.agents"
+
+  # Antigravity CLI (agy): skills + config, no macOS-specific files
+  ".agents/skills::${HOME}/.gemini/skills"
+  ".agents/skills::${HOME}/.gemini/antigravity-cli/skills"
+  "gemini/antigravity-cli/settings.json::${HOME}/.gemini/antigravity-cli/settings.json"
+  "gemini/config/agents::${HOME}/.gemini/config/agents"
+  "opencode/AGENTS.md::${HOME}/.gemini/AGENTS.md"
 
   # Omarchy hooks, extensions, branding (individual files — NOT whole omarchy dir)
   "omarchy/hooks/theme-set::${HOME}/.config/omarchy/hooks/theme-set"

@@ -27,3 +27,28 @@ require("default.hypr.toggles")
 
 -- Add any other personal Hyprland configuration below.
 -- o.window("qemu", { workspace = "5" })
+
+-- A new Chromium/Helium window belongs to the workspace where that browser
+-- already runs, not to whichever workspace happens to be focused.
+hl.on("window.open", function(window)
+  local class = (window.class or ""):lower()
+  if class ~= "chromium" and class ~= "helium" then
+    return
+  end
+
+  local target
+  for _, other in ipairs(hl.get_windows()) do
+    if other.address ~= window.address and (other.class or ""):lower() == class and other.workspace then
+      target = other.workspace.id
+      break
+    end
+  end
+
+  if target and window.workspace and window.workspace.id ~= target then
+    hl.dispatch(hl.dsp.window.move({
+      workspace = tostring(target),
+      follow = false,
+      window = "address:" .. window.address,
+    }))
+  end
+end)

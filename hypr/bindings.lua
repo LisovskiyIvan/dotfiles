@@ -34,3 +34,7 @@ o.bind("SUPER + H", "Focus on left window", hl.dsp.focus({ direction = "l" }))
 -- o.bind("SUPER + SHIFT + S", nil, "omarchy-capture-screenshot")
 -- o.bind("SUPER + H", nil, "voxtype record toggle")
 -- o.bind("SUPER + PERIOD", nil, "omarchy-shell shell toggle omarchy.emojis")
+
+-- Dictation: Hex instead of Superwhisper. Hex cannot grab a bare modifier on
+-- Linux, so the desktop owns the keys.
+o.bind_hold("ALT + Alt_R", "Start Hex dictation", "hex dictation start", "Stop Hex dictation", "hex dictation stop", { ignore_mods = true })

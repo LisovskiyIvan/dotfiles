@@ -1,2 +1,6 @@
 .mimocode
 rex/worktree/
+
+# Machine-local agent skills symlinked from the OS / third-party installs
+.agents/skills/omarchy-app
+.agents/skills/superwhisper

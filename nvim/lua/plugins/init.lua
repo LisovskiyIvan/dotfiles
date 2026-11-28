@@ -75,7 +75,6 @@ return {
     opts = {
       ensure_installed = {
         "rust_analyzer",
-        "gopls",
         "pyright",
         "clangd",
         "zls",
@@ -86,7 +85,7 @@ return {
       },
       -- tsrs isn't a Mason package (install via `bun add -g tsrs`),
       -- and we must stop Mason from auto-enabling the installed typescript-language-server.
-      automatic_enable = { exclude = { "ts_ls", "vtsls" } },
+      automatic_enable = { exclude = { "ts_ls", "vtsls", "gopls" } },
     },
   },
 
